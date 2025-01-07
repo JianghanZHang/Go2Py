@@ -98,18 +98,7 @@ class reaching_MPPI(BaseMPPI):
         actions = self.perturb_action()
         self.obs = obs
 
-        # Calculate the direction and distance to the goal
-        direction = self.body_ref[:3] - obs[:3]
-        goal_delta = np.linalg.norm(direction)
-
-        # Update desired orientation based on the goal position
-        if goal_delta > 0.1 and not self.timer.waiting:
-            self.goal_ori = calculate_orientation_quaternion(obs[:3], self.body_ref[:3])
-        else:
-            self.goal_ori = np.array([1, 0, 0, 0])
-
-        self.body_ref[3:7] = self.goal_ori
-
+        
         # Perform rollouts using threaded rollout function
         self.rollout_func(self.state_rollouts, actions, np.repeat(
             np.array([np.concatenate([[0], obs])]), self.n_samples, axis=0), 
@@ -120,8 +109,8 @@ class reaching_MPPI(BaseMPPI):
             self.joints_ref = self.gait_scheduler.gait[:, self.gait_scheduler.indices[:self.horizon]]
 
         # Calculate costs for each sampled trajectory
-        costs_sum = self.cost_func(self.state_rollouts[:, :, 1:], actions, self.joints_ref, self.body_ref)
-
+        costs_sum = self.cost_func(self.state_rollouts[:, :, 1:], actions, sensor_datas, self.joints_ref, self.tips_frame_pos_ref)
+        
         # Update the gait scheduler
         self.gait_scheduler.roll()
 
