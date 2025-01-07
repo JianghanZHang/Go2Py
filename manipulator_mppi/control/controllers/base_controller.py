@@ -39,7 +39,8 @@ class BaseMPPI:
         self.n_samples = params['n_samples']
         self.noise_sigma = np.array(params['noise_sigma'])
         self.num_workers = params['n_workers']
-        # self.sampling_init = np.array([-0.3, 1.34, -2.83, 0.3, 1.34, -2.83] * 2)
+
+        self.sensor_data_size = params['sensor_data_size']
 
         self.sampling_init = np.array([0.0, -0.6, -1.2] * 3)
 
@@ -59,6 +60,11 @@ class BaseMPPI:
         self.state_rollouts = np.zeros(
             (self.n_samples, self.horizon, mujoco.mj_stateSize(self.model, mujoco.mjtState.mjSTATE_FULLPHYSICS.value))
         )
+
+        self.sensor_datas = np.zeros(
+            (self.n_samples, self.horizon, self.sensor_data_size)
+        )
+
         self.selected_trajectory = None
 
         # Action limits
@@ -181,6 +187,10 @@ class BaseMPPI:
         # Reset state rollouts with updated dimensions
         self.state_rollouts = np.zeros(
             (self.n_samples, self.horizon, mujoco.mj_stateSize(self.model, mujoco.mjtState.mjSTATE_FULLPHYSICS.value))
+        )
+
+        self.sensor_datas = np.zeros(
+            (self.n_samples, self.horizon, self.sensor_data_size)
         )
 
         # Reset the planner to its initial state
