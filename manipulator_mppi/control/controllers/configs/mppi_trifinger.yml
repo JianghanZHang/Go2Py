@@ -29,18 +29,16 @@ n_knots: 4          # Number of control points (knots) in the spline.
 # ============================
 # Noise standard deviations applied to control inputs for exploration.
 noise_sigma:
-  - 0.06 # Hip joint (Front Right - FR)
-  - 0.2  # Thigh joint (FR)
-  - 0.2  # Calf joint (FR)
-  - 0.06 # Hip joint (Front Left - FL)
-  - 0.2  # Thigh joint (FL)
-  - 0.2  # Calf joint (FL)
-  - 0.06 # Hip joint (Rear Right - RR)
-  - 0.2  # Thigh joint (RR)
-  - 0.2  # Calf joint (RR)
-  - 0.06 # Hip joint (Rear Left - RL)
-  - 0.2  # Thigh joint (RL)
-  - 0.2  # Calf joint (RL)
+  - 0.06 # Upper joint (finger 0)
+  - 0.2  # Middle joint (finger 0)
+  - 0.2  # Lower joint (finger 0)
+  - 0.06 # Upper joint (finger 120)
+  - 0.2  # Middle joint (finger 120)
+  - 0.2  # Lower joint (finger 120)
+  - 0.06 # Upper joint (finger 240)
+  - 0.2  # Middle joint (finger 240)
+  - 0.2  # Lower joint (finger 240)
+
 
 # ============================
 # Cost Function Parameters
@@ -49,56 +47,38 @@ noise_sigma:
 # Diagonal entries of the state cost matrix Q
 # Higher values penalize deviations from reference states more heavily.
 Q_diag:
-  - 7000   # x-position
-  - 7000   # y-position
-  - 15000  # z-position (height)
-  - 350000 # Quaternion distance cost
-  - 0      # Does not matter
-  - 0      # Does not matter
-  - 0      # Does not matter
-  - 700    # Hip joint (FR)
-  - 700    # Thigh joint (FR)
-  - 700    # Calf joint (FR)
-  - 700    # Hip joint (FL)
-  - 700    # Thigh joint (FL)
-  - 700    # Calf joint (FL)
-  - 700    # Hip joint (RR)
-  - 700    # Thigh joint (RR)
-  - 700    # Calf joint (RR)
-  - 700    # Hip joint (RL)
-  - 700    # Thigh joint (RL)
-  - 700    # Calf joint (RL)
-  - 0.0001 # x velocity
-  - 0.0001 # y velocity
-  - 0.0001 # z velocity
-  - 0.0001 # Angular velocity (x)
-  - 0.0001 # Angular velocity (y)
-  - 0.0001 # Angular velocity (z)
-  - 0.1    # Hip joint velocity (FR)
-  - 0.1    # Thigh joint velocity (FR)
-  - 0.1    # Calf joint velocity (FR)
-  - 0.1    # Hip joint velocity (FL)
-  - 0.1    # Thigh joint velocity (FL)
-  - 0.1    # Calf joint velocity (FL)
-  - 0.1    # Hip joint velocity (RR)
-  - 0.1    # Thigh joint velocity (RR)
-  - 0.1    # Calf joint velocity (RR)
-  - 0.1    # Hip joint velocity (RL)
-  - 0.1    # Thigh joint velocity (RL)
-  - 0.1    # Calf joint velocity (RL)
+  - 0.1 # Upper joint (finger 0)
+  - 0.1 # Middle joint (finger 0)
+  - 0.1 # Lower joint (finger 0)
+  - 0.1 # Upper joint (finger 120)
+  - 0.1 # Middle joint (finger 120)
+  - 0.1 # Lower joint (finger 120)
+  - 0.1 # Upper joint (finger 240)
+  - 0.1 # Middle joint (finger 240)
+  - 0.1 # Lower joint (finger 240)
+
+# Diagonal entries of an individual cost term for frame position (This need to correspesond to the order in Mujoco's sensor_data)
+W_frame_pos:
+ - 100 # x-position (finger 0 tip frame)
+ - 100 # y-position (finger 0 tip frame)
+ - 100 # z-position (finger 0 tip frame)
+ - 100 # x-position (finger 120 tip frame)
+ - 100 # y-position (finger 120 tip frame)
+ - 100 # z-position (finger 120 tip frame)
+ - 100 # x-position (finger 240 tip frame)
+ - 100 # y-position (finger 240 tip frame)
+ - 100 # z-position (finger 240 tip frame)
+
 
 # Diagonal entries of the control cost matrix R
 # Penalizes excessive control effort (torque commands).
 R_diag:
-  - 0.001 # Hip joint (FR)
-  - 0.001 # Thigh joint (FR)
-  - 0.001 # Calf joint (FR)
-  - 0.001 # Hip joint (FL)
-  - 0.001 # Thigh joint (FL)
-  - 0.001 # Calf joint (FL)
-  - 0.001 # Hip joint (RR)
-  - 0.001 # Thigh joint (RR)
-  - 0.001 # Calf joint (RR)
-  - 0.001 # Hip joint (RL)
-  - 0.001 # Thigh joint (RL)
-  - 0.001 # Calf joint (RL)
+  - 0.01 # Upper joint (finger 0)
+  - 0.01  # Middle joint (finger 0)
+  - 0.01  # Lower joint (finger 0)
+  - 0.01 # Upper joint (finger 120)
+  - 0.01  # Middle joint (finger 120)
+  - 0.01  # Lower joint (finger 120)
+  - 0.01 # Upper joint (finger 240)
+  - 0.01  # Middle joint (finger 240)
+  - 0.01  # Lower joint (finger 240)

@@ -9,6 +9,8 @@ from control.controllers.base_controller import BaseMPPI
 from utils.transforms import batch_world_to_local_velocity, calculate_orientation_quaternion
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+NQ = 9
+
 class reaching_MPPI(BaseMPPI):
     """
     Model Predictive Path Integral (MPPI) Controller for quadruped robots.
@@ -48,9 +50,13 @@ class reaching_MPPI(BaseMPPI):
         # load the configuration file
         with open(CONFIG_PATH, 'r') as file:
             params = yaml.safe_load(file)
+
         # Cost weights
         self.Q = np.diag(np.array(params['Q_diag']))
+
         self.R = np.diag(np.array(params['R_diag']))
+
+        self.W_frame_pos = np.diag(np.array(params['W_frame_pos']))
 
         # Set initial parameters and state
         self.obs = None
@@ -60,51 +66,24 @@ class reaching_MPPI(BaseMPPI):
       
         # Initialize planner and goals
         self.reset_planner()
-        self.goal_index = 0
-        self.body_ref = np.concatenate((self.goal_pos[self.goal_index],
-                                        self.goal_ori[self.goal_index],
-                                        self.cmd_vel[self.goal_index],
-                                        np.zeros(4)))
+        # self.goal_index = 0
+        # self.body_ref = np.concatenate((self.goal_pos[self.goal_index],
+        #                                 self.goal_ori[self.goal_index],
+        #                                 self.cmd_vel[self.goal_index],
+        #                                 np.zeros(4)))
+
+        self.state_ref = np.array([0.0, -0.6, -1.2] * 3)
+
+        self.frame_refs = np.array([0.0, 0.0, 0.10],
+                                   [0.0, 0.0, 0.15],
+                                   [0.0, 0.0, 0.20])
         
-        self.gait_scheduler = self.gaits[self.desired_gait[self.goal_index]]
+        # self.gait_scheduler = self.gaits[self.desired_gait[self.goal_index]]
         self.task_success = False
 
         # Debug information
         print(f"Initial goal {self.goal_index}: {self.goal_pos[self.goal_index] }")
         print(f"Initial gait {self.desired_gait[self.goal_index]}")
-    
-    def next_goal(self):
-        """
-        Progress to the next goal based on the task sequence.
-        Updates the internal reference trajectory and gait scheduler.
-        """
-        self.timer.increment()
-
-        if self.goal_index < len(self.goal_pos) - 1 and self.timer.done:
-            # Move to the next goal
-            self.goal_index += 1
-            self.body_ref[:3] = self.goal_pos[self.goal_index]
-            self.body_ref[7:9] = self.cmd_vel[self.goal_index]
-            self.gait_scheduler = self.gaits[self.desired_gait[self.goal_index]]
-            self.timer.reset()
-            self.timer.end_time = self.waiting_times[self.goal_index]
-            print(f"Moved to next goal {self.goal_index}: {self.goal_pos[self.goal_index]}")
-            print(f"Gait: {self.desired_gait[self.goal_index]}")
-            self.timer.waiting = False
-
-        elif self.goal_index == len(self.goal_pos) - 1 and not self.task_success and self.timer.done:
-            # Final goal reached
-            print("Task succeeded.")
-            self.task_success = True
-
-        else:
-            self.timer.waiting = True
-
-        if not self.task_success:
-            if self.desired_gait[self.goal_index] in ['in_place', 'walk', 'walk_fast']:
-                self.noise_sigma = np.array([0.06, 0.1, 0.1] * 4)
-            elif self.desired_gait[self.goal_index] in ['trot']:
-                self.noise_sigma = np.array([0.06, 0.2, 0.2] * 4)
         
     def update(self, obs):
         """
@@ -181,51 +160,64 @@ class reaching_MPPI(BaseMPPI):
         return 1 - np.abs(dot_products)
 
 
-    def quadruped_cost_np(self, x, u, x_ref):
+    def trifinger_cost_np(self, x, u, x_ref, sensor_data, sensor_data_ref):
         """
-        Compute the cost for quadruped motion based on state and action errors.
+        Compute the cost for trifinger based on state, action, and some FK errors.
 
         Args:
             x (np.ndarray): Current states (N x state_dim).
             u (np.ndarray): Current actions (N x action_dim).
             x_ref (np.ndarray): Reference states (N x state_dim).
+            sensor_data: Current sensor data (N x sensor_dim=9; 3 for each tip position)
+            sensor_data_ref: Reference sensor data (N x sensor_dim)
 
         Returns:
             np.ndarray: Computed cost for each sample.
         """
         kp = 50  # Proportional gain for joint error
         kd = 3   # Derivative gain for joint velocity error
-
+        
         # Compute state error relative to the reference
         x_error = x - x_ref
 
-        # Compute quaternion distance for orientation error
-        q_dist = self.quaternion_distance_np(x[:, 3:7], x_ref[:, 3:7])
-        x_error[:, 3] = q_dist
-        x_error[:, 4] = q_dist
-        x_error[:, 5] = q_dist
-        x_error[:, 6] = q_dist
+        # tip_frame_pos_0 = sensor_data[:3]
+        # tip_frame_pos_120 = sensor_data[3:6]
+        # tip_frame_pos_240 = sensor_data[6:9]
+
+        # tip_frame_pos_0_ref = sensor_data_ref[:3]
+        # tip_frame_pos_120_ref = sensor_data_ref[3:6]
+        # tip_frame_pos_240_ref = sensor_data_ref[6:9]
+
+        tips_frame_pos = sensor_data[:9]
+        tips_frame_pos_ref = sensor_data_ref[:9]
+
+        tips_frame_pos_error = tips_frame_pos - tips_frame_pos_ref
 
         # Compute joint and velocity errors
-        x_joint = x[:, 7:19]
-        v_joint = x[:, 25:]
+        x_joint = x[:, :NQ]
+        v_joint = x[:, NQ:]
         u_error = kp * (u - x_joint) - kd * v_joint
 
-        # Compute positional cost (L1 norm for positional error)
-        x_error[:, :3] = 0  # Ignore positional error for simplicity
-        x_pos_error = x[:, :3] - x_ref[:, :3]
-        L1_norm_pos_cost = np.abs(np.dot(x_pos_error, self.Q[:3, :3])).sum(axis=1)
+        
+        # # Compute positional cost (L1 norm for positional error)
+        # x_error[:, :3] = 0  # Ignore positional error for simplicity
+        # x_pos_error = x[:, :3] - x_ref[:, :3]
+        # L1_norm_pos_cost = np.abs(np.dot(x_pos_error, self.Q[:3, :3])).sum(axis=1)
+
+        L2_norm_tips_pos_cost = np.einsum('ij,ik,jk->i', tips_frame_pos_error, tips_frame_pos_error, self.W_frame_pos)
+
+        L1_norm_tips_pos_cost = np.abs(np.dot(tips_frame_pos_error, self.Q[:3, :3])).sum(axis=1)
 
         # Compute total cost
         cost = (
             np.einsum('ij,ik,jk->i', x_error, x_error, self.Q) +
             np.einsum('ij,ik,jk->i', u_error, u_error, self.R) +
-            L1_norm_pos_cost
+            L2_norm_tips_pos_cost
         )
         return cost
 
 
-    def calculate_total_cost(self, states, actions, joints_ref, body_ref):
+    def calculate_total_cost(self, states, actions, sensor_datas, joints_ref, tips_frame_pos_ref):
         """
         Calculate the total cost for all rollouts.
 
@@ -240,31 +232,29 @@ class reaching_MPPI(BaseMPPI):
         """
         num_samples = states.shape[0]
         num_pairs = states.shape[1]
-
-        # Repeat body reference for all samples and time steps
-        traj_body_ref = np.repeat(body_ref[np.newaxis, :], num_samples * num_pairs, axis=0)
+        
 
         # Flatten states and actions for batch processing
         states = states.reshape(-1, states.shape[2])
         actions = actions.reshape(-1, actions.shape[2])
+        sensor_datas = actions.reshape(-1, sensor_datas.shape[2])
 
         # Repeat and reshape joint references for batch processing
         joints_ref = joints_ref.T
         joints_ref = np.tile(joints_ref, (num_samples, 1, 1))
         joints_ref = joints_ref.reshape(-1, joints_ref.shape[2])
 
-        # Concatenate body and joint references for full reference state
-        x_ref = np.concatenate(
-            [traj_body_ref[:, :7], joints_ref[:, :12], traj_body_ref[:, 7:], joints_ref[:, 12:]],
-            axis=1
-        )
+        tips_frame_pos_ref = tips_frame_pos_ref.T
+        tips_frame_pos_ref = np.tile(tips_frame_pos_ref, (num_samples, 1, 1))
+        tips_frame_pos_ref = tips_frame_pos_ref.reshape(-1, tips_frame_pos_ref.shape[2])
 
-        # Rotate velocity vectors to the local frame
-        rotated_ref = batch_world_to_local_velocity(states[:, 3:7], states[:, 19:22])
-        states[:, 19:22] = rotated_ref
+        # Concatenate body and joint references for full reference state
+        x_ref = joints_ref
+
 
         # Compute cost for each rollout
-        costs = self.quadruped_cost_np(states, actions, x_ref)
+        costs = self.trifinger_cost_np(self, states, actions, x_ref, sensor_datas, tips_frame_pos_ref)
+        
 
         # Sum costs across time steps for each sample
         total_costs = costs.reshape(num_samples, num_pairs).sum(axis=1)
@@ -292,4 +282,4 @@ class reaching_MPPI(BaseMPPI):
         self.shutdown()
     
 if __name__ == "__main__":
-    mppi = MPPI()
+    mppi = reaching_MPPI()

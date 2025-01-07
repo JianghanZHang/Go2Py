@@ -32,7 +32,7 @@
         
         <!-- Add a table -->
         <geom name="table" rgba="0.8 0.8 0.8 1.0" friction="0.8"
-              size="0 0 0.00000000001" type="plane" material="groundplane"
+              size="0 0 0.05" type="plane" material="groundplane"
               condim="6"/>
 
         <!-- =================== finger arms base =================== -->
@@ -129,8 +129,15 @@
 
     <!-- Finger tips in global frame -->
     <sensor>
-        <framepos name= "tip_position_0" objtype="site"  objname="finger_tip_0" />
+        <framepos name= "tip_position_0" objtype="site"  objname="finger_tip_0"/>
+
         <framepos name= "tip_position_120" objtype="site"  objname="finger_tip_120"/>
+
         <framepos name= "tip_position_240" objtype="site"  objname="finger_tip_240"/>
     </sensor>
+
+    <keyframe>
+    <key name="home" qpos="0.0, -0.6, -1.2 0.0, -0.6, -1.2 0.0, -0.6, -1.2"
+      ctrl="0.0, -0.6, -1.2 0.0, -0.6, -1.2 0.0, -0.6, -1.2"/>
+    </keyframe>
 </mujoco>
