@@ -183,10 +183,7 @@ class Simulator:
                     print(f'finger0 action: {action[:3]}')
                     print(f'finger120 action: {action[3:6]}')
                     print(f'finger240 action: {action[6:9]}')
-
                     self.data.ctrl[:] = action
-
-            # import pdb; pdb.set_trace()
 
             # step
             mujoco.mj_step(self.model, self.data)
