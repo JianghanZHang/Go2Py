@@ -23,8 +23,8 @@ DEFAULT_ORIENTATION = [[1, 0, 0, 0]]
 TASKS = {
     "reaching": {
         "finger_tips_pos": [[0.0, 0.0, 0.10],
-                            [0.0, 0.0, 0.15],
-                            [0.0, 0.0, 0.20]],
+                            [0.0, 0.0, 0.1],
+                            [0.0, 0.0, 0.1]],
 
         "model_path": DEFAULT_MODEL_PATH,
         "config_path": DEFAULT_CONFIG_PATH,
