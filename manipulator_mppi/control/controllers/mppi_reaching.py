@@ -6,7 +6,7 @@ import numpy as np
 # Local imports (ensure these are part of your package structure)
 from utils.tasks import get_task
 from control.controllers.base_controller import BaseMPPI
-from utils.transforms import batch_world_to_local_velocity, calculate_orientation_quaternion
+# from utils.transforms import batch_world_to_local_velocity, calculate_orientation_quaternion
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 NQ = 9
@@ -34,11 +34,9 @@ class reaching_MPPI(BaseMPPI):
         self.task = task
         self.task_data = get_task(task)
 
-        self.eff_pos = self.task_data['goal_pos']
-
         model_path = self.task_data['model_path'] 
         config_path = self.task_data['config_path']
-        waiting_times = self.task_data['waiting_times']
+        # waiting_times = self.task_data['waiting_times']
 
         # Dynamically resolve paths for model and configuration files
         CONFIG_PATH = os.path.join(BASE_DIR, config_path)
@@ -62,29 +60,21 @@ class reaching_MPPI(BaseMPPI):
         self.obs = None
         self.internal_ref = True
         self.exp_weights = np.ones(self.n_samples) / self.n_samples  # Initial MPPI weights
-        self.waiting_times = waiting_times
+        # self.waiting_times = waiting_times
       
         # Initialize planner and goals
         self.reset_planner()
-        # self.goal_index = 0
-        # self.body_ref = np.concatenate((self.goal_pos[self.goal_index],
-        #                                 self.goal_ori[self.goal_index],
-        #                                 self.cmd_vel[self.goal_index],
-        #                                 np.zeros(4)))
 
-        self.state_ref = np.array([0.0, -0.6, -1.2] * 3)
+        self.tips_frame_pos_ref_1d = np.array(self.task_data['finger_tips_pos']).flatten()
 
-        self.frame_refs = np.array([0.0, 0.0, 0.10],
-                                   [0.0, 0.0, 0.15],
-                                   [0.0, 0.0, 0.20])
-        
-        # self.gait_scheduler = self.gaits[self.desired_gait[self.goal_index]]
+        self.tips_frame_pos_ref = np.tile(self.tips_frame_pos_ref_1d[None, :], (self.horizon, 1))
+
+        self.joints_ref_1d = np.array([0.0, -0.6, -1.2] * 3 + [0.0, 0.0, 0.0] * 3)  # shape (18,)
+        self.joints_ref = np.tile(self.joints_ref_1d[None, :], (self.horizon, 1))
+
         self.task_success = False
 
-        # Debug information
-        print(f"Initial goal {self.goal_index}: {self.goal_pos[self.goal_index] }")
-        print(f"Initial gait {self.desired_gait[self.goal_index]}")
-        
+
     def update(self, obs):
         """
         Update the MPPI controller based on the current observation.
@@ -98,22 +88,17 @@ class reaching_MPPI(BaseMPPI):
         actions = self.perturb_action()
         self.obs = obs
 
-        
+        # print('Entering rollout from update()')
+        # import pdb; pdb.set_trace()
         # Perform rollouts using threaded rollout function
         self.rollout_func(self.state_rollouts, actions, np.repeat(
-            np.array([np.concatenate([[0], obs])]), self.n_samples, axis=0), 
+            np.array([np.concatenate([[0], obs])]), self.n_samples, axis=0), self.sensor_datas,
             num_workers=self.num_workers, nstep=self.horizon)
 
-        # Update joint references from the gait scheduler
-        if self.internal_ref:
-            self.joints_ref = self.gait_scheduler.gait[:, self.gait_scheduler.indices[:self.horizon]]
 
         # Calculate costs for each sampled trajectory
-        costs_sum = self.cost_func(self.state_rollouts[:, :, 1:], actions, sensor_datas, self.joints_ref, self.tips_frame_pos_ref)
+        costs_sum = self.cost_func(self.state_rollouts[:, :, 1:], actions, self.sensor_datas, self.joints_ref, self.tips_frame_pos_ref)
         
-        # Update the gait scheduler
-        self.gait_scheduler.roll()
-
         # Calculate MPPI weights for the samples
         min_cost = np.min(costs_sum)
         max_cost = np.max(costs_sum)
@@ -129,6 +114,7 @@ class reaching_MPPI(BaseMPPI):
         self.trajectory = np.roll(updated_actions, shift=-1, axis=0)
         self.trajectory[-1] = updated_actions[-1]
 
+        # import pdb; pdb.set_trace()
         # Return the first action in the trajectory as the output action
         return updated_actions[0]
     
@@ -149,7 +135,7 @@ class reaching_MPPI(BaseMPPI):
         return 1 - np.abs(dot_products)
 
 
-    def trifinger_cost_np(self, x, u, x_ref, sensor_data, sensor_data_ref):
+    def trifinger_cost_np(self, x, action, x_ref, sensor_data, sensor_data_ref):
         """
         Compute the cost for trifinger based on state, action, and some FK errors.
 
@@ -163,8 +149,8 @@ class reaching_MPPI(BaseMPPI):
         Returns:
             np.ndarray: Computed cost for each sample.
         """
-        kp = 50  # Proportional gain for joint error
-        kd = 3   # Derivative gain for joint velocity error
+        kp = 0  # Proportional gain for joint error
+        kd = 0   # Derivative gain for joint velocity error
         
         # Compute state error relative to the reference
         x_error = x - x_ref
@@ -177,32 +163,35 @@ class reaching_MPPI(BaseMPPI):
         # tip_frame_pos_120_ref = sensor_data_ref[3:6]
         # tip_frame_pos_240_ref = sensor_data_ref[6:9]
 
-        tips_frame_pos = sensor_data[:9]
-        tips_frame_pos_ref = sensor_data_ref[:9]
+        tips_frame_pos = sensor_data[:, :9]
+        tips_frame_pos_ref = sensor_data_ref[:, :9]
+
 
         tips_frame_pos_error = tips_frame_pos - tips_frame_pos_ref
+
 
         # Compute joint and velocity errors
         x_joint = x[:, :NQ]
         v_joint = x[:, NQ:]
-        u_error = kp * (u - x_joint) - kd * v_joint
-
-        
-        # # Compute positional cost (L1 norm for positional error)
-        # x_error[:, :3] = 0  # Ignore positional error for simplicity
-        # x_pos_error = x[:, :3] - x_ref[:, :3]
-        # L1_norm_pos_cost = np.abs(np.dot(x_pos_error, self.Q[:3, :3])).sum(axis=1)
+        u_error = kp * (action - x_joint) - kd * v_joint
 
         L2_norm_tips_pos_cost = np.einsum('ij,ik,jk->i', tips_frame_pos_error, tips_frame_pos_error, self.W_frame_pos)
 
-        L1_norm_tips_pos_cost = np.abs(np.dot(tips_frame_pos_error, self.Q[:3, :3])).sum(axis=1)
+        L1_norm_tips_pos_cost = np.abs(np.dot(tips_frame_pos_error, self.W_frame_pos)).sum(axis=1)
 
+        # # Compute positional cost (L1 norm for positional error)
+        # L1_norm_tips_pos_cost = np.abs(np.dot(tips_frame_pos_error, self.Q[:3, :3])).sum(axis=1)
         # Compute total cost
+        state_error = np.einsum('ij,ik,jk->i', x_error, x_error, self.Q)
+
+        control_error = np.einsum('ij,ik,jk->i', u_error, u_error, self.R)
+
         cost = (
             np.einsum('ij,ik,jk->i', x_error, x_error, self.Q) +
             np.einsum('ij,ik,jk->i', u_error, u_error, self.R) +
-            L2_norm_tips_pos_cost
+            L1_norm_tips_pos_cost
         )
+
         return cost
 
 
@@ -226,27 +215,29 @@ class reaching_MPPI(BaseMPPI):
         # Flatten states and actions for batch processing
         states = states.reshape(-1, states.shape[2])
         actions = actions.reshape(-1, actions.shape[2])
-        sensor_datas = actions.reshape(-1, sensor_datas.shape[2])
+        sensor_datas = sensor_datas.reshape(-1, sensor_datas.shape[2])
 
-        # Repeat and reshape joint references for batch processing
-        joints_ref = joints_ref.T
-        joints_ref = np.tile(joints_ref, (num_samples, 1, 1))
-        joints_ref = joints_ref.reshape(-1, joints_ref.shape[2])
+        # # Repeat and reshape joint references for batch processing
+        # joints_ref = joints_ref.T
+        # joints_ref = np.tile(joints_ref, (num_samples, 1, 1))
+        # joints_ref = joints_ref.reshape(-1, joints_ref.shape[2])
 
-        tips_frame_pos_ref = tips_frame_pos_ref.T
-        tips_frame_pos_ref = np.tile(tips_frame_pos_ref, (num_samples, 1, 1))
-        tips_frame_pos_ref = tips_frame_pos_ref.reshape(-1, tips_frame_pos_ref.shape[2])
+        joints_ref = np.tile(joints_ref, (num_samples, 1))  
+
+        # tips_frame_pos_ref = tips_frame_pos_ref.T
+        tips_frame_pos_ref = np.tile(tips_frame_pos_ref, (num_samples, 1))
+        # tips_frame_pos_ref = tips_frame_pos_ref.reshape(-1, tips_frame_pos_ref.shape[2])
 
         # Concatenate body and joint references for full reference state
         x_ref = joints_ref
 
-
         # Compute cost for each rollout
-        costs = self.trifinger_cost_np(self, states, actions, x_ref, sensor_datas, tips_frame_pos_ref)
-        
+        costs = self.trifinger_cost_np(states, actions, x_ref, sensor_datas, tips_frame_pos_ref)
 
         # Sum costs across time steps for each sample
         total_costs = costs.reshape(num_samples, num_pairs).sum(axis=1)
+
+
         return total_costs
 
     def eval_best_trajectory(self):
@@ -263,9 +254,18 @@ class reaching_MPPI(BaseMPPI):
             # Create a rollout array for the best trajectory
             best_rollouts = np.zeros((1, self.horizon, mujoco.mj_stateSize(self.model, mujoco.mjtState.mjSTATE_FULLPHYSICS.value)))
             # Perform rollout for the best trajectory
-            self.rollout_func(best_rollouts, np.array([self.selected_trajectory]), np.repeat(np.array([np.concatenate([[0],self.obs])]), 1, axis=0), num_workers=self.num_workers, nstep=self.horizon)
+            sensor_data_rollout = np.zeros((1, self.horizon, self.sensor_data_size))
+            # import pdb; pdb.set_trace()
+            # print('Entering rollout from eval_best_trajectory()')
+            self.rollout_func(best_rollouts, np.array([self.selected_trajectory]), np.repeat(np.array([np.concatenate([[0],self.obs])]), 1, axis=0), sensor_data_rollout, num_workers=self.num_workers, nstep=self.horizon)
+
+            # import pdb; pdb.set_trace()
+            print(f'tip0 position{sensor_data_rollout[0, 0, 0:3]}')
+            print(f'tip120 position{sensor_data_rollout[0, 0, 3:6]}')
+            print(f'tip240 position{sensor_data_rollout[0, 0, 6:9]}')
+
         # Compute and return the cost of the best trajectory
-        return (self.cost_func(best_rollouts[:,:,1:], np.array([self.selected_trajectory]), self.joints_ref, self.body_ref))[0]
+        return (self.cost_func(best_rollouts[:,:,1:], np.array([self.selected_trajectory]), sensor_data_rollout, self.joints_ref_1d, self.tips_frame_pos_ref_1d))[0]
 
     def __del__(self):
         self.shutdown()

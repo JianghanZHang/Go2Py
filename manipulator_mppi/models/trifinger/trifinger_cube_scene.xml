@@ -17,7 +17,6 @@
                 midphase="enable"
                 multiccd="disable"   
                 invdiscrete="disable">
-                <!-- autoreset="disable" -->
         </flag>
 
     </option>

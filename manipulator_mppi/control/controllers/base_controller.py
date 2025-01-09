@@ -33,6 +33,7 @@ class BaseMPPI:
         self.model.opt.enableflags = 1  # Override contact settings
         self.model.opt.o_solref = np.array(params['o_solref'])
 
+        
         # MPPI parameters
         self.temperature = params['lambda']
         self.horizon = params['horizon']
@@ -43,6 +44,14 @@ class BaseMPPI:
         self.sensor_data_size = params['sensor_data_size']
 
         self.sampling_init = np.array([0.0, -0.6, -1.2] * 3)
+
+        ##########  DEBUG   ############
+        # import mujoco.viewer as viewer
+        # Mjdata = mujoco.MjData(self.model)
+        # Mjdata.qpos = self.sampling_init
+        # mujoco.mj_forward(self.model, Mjdata)
+        # import pdb; pdb.set_trace()
+        
 
         # Initialize rollouts and sampling configurations
         self.h = params['dt']
@@ -60,7 +69,8 @@ class BaseMPPI:
         self.state_rollouts = np.zeros(
             (self.n_samples, self.horizon, mujoco.mj_stateSize(self.model, mujoco.mjtState.mjSTATE_FULLPHYSICS.value))
         )
-
+        
+        # import pdb; pdb.set_trace()
         self.sensor_datas = np.zeros(
             (self.n_samples, self.horizon, self.sensor_data_size)
         )
@@ -72,6 +82,7 @@ class BaseMPPI:
         # self.act_max = np.array([0.863, 4.501, -0.888] * 4)
         # self.act_min = np.array([-0.863, -0.686, -2.818] * 4)
         self.act_min = np.array([-1.5707963267948966, -1.3526301702956054, -3.001966313430247] * 3)
+
         self.act_max = np.array([1.5707963267948966, 4.494222823885399, 3.001966313430247] * 3)
 
     def reset_planner(self):
@@ -94,7 +105,7 @@ class BaseMPPI:
     def perturb_action(self):
         if self.sample_type == 'normal':
             size = (self.n_samples, self.horizon, self.act_dim)
-            actions = self.trajectory + self.generate_noise(size)
+            actions = self.trajectory + self.generate_noise(size, self.noise_sigma)
             actions = np.clip(actions, self.act_min, self.act_max)
             return actions
         
@@ -102,14 +113,14 @@ class BaseMPPI:
             indices_float = np.linspace(0, self.horizon - 1, num=self.n_knots)
             indices = np.round(indices_float).astype(int)
             size = (self.n_samples, self.n_knots, self.act_dim)
-            noise = self.generate_noise(size)
+            noise = self.generate_noise(size, self.noise_sigma)
             knot_points = self.trajectory[indices] + noise
             cubic_spline = CubicSpline(indices, knot_points, axis=1)
             actions = cubic_spline(np.arange(self.horizon))
             actions = np.clip(actions, self.act_min, self.act_max)
             return actions
         
-    def generate_noise(self, size):
+    def generate_noise(self, size, noise_sigma):
         """
         Generate noise for sampling actions.
 
@@ -119,7 +130,7 @@ class BaseMPPI:
         Returns:
             np.ndarray: Generated noise scaled by `noise_sigma`.
         """
-        return self.random_generator.normal(size=size) * self.noise_sigma
+        return self.random_generator.normal(size=size) * noise_sigma
 
     def thread_initializer(self):
         """Initialize thread-local storage for MuJoCo data."""
@@ -129,7 +140,7 @@ class BaseMPPI:
         """Shutdown the thread pool executor."""
         self.executor.shutdown(wait=True)
 
-    def call_rollout(self, initial_state, ctrl, state, sensor_data=None):
+    def call_rollout(self, initial_state, ctrl, state, sensor_data):
         """
         Perform a rollout of the model given the initial state and control actions.
 
@@ -143,10 +154,44 @@ class BaseMPPI:
         #                 initial_state=initial_state, control=ctrl, state=state)
 
         # see https://mujoco.readthedocs.io/en/latest/changelog.html#id1 for changes in rollout function
-        rollout.rollout(self.model, self.thread_local.data, skip_checks=False, 
-                        nstep=state.shape[1], initial_state=initial_state, control=ctrl, state=state, sensordata=sensor_data)
+        
+        # nsamples = state.shape[0]
+        # horizon = state.shape[1]
 
-    def threaded_rollout(self, state, ctrl, initial_state, sensor_data,num_workers=32, nstep=5):
+        # try:
+        #     for i in range(nsamples):
+        #         idx = i * horizon
+        #         idx_next = (i+1) * horizon
+        #         # slice out the i-th sample's data
+        #         ctrl_i = ctrl[idx: idx_next]                         # shape (horizon, act_dim)
+        #         state_i = state[idx: idx_next]                       # shape (horizon+1, state_dim)
+        #         sensordata_i = sensor_data[idx: idx_next]            # shape (horizon, sensor_data_size)
+
+        #     rollout.rollout(
+        #         self.model, 
+        #         self.thread_local.data, 
+        #         nstep=state.shape[1],
+        #         initial_state=initial_state,
+        #         control=ctrl_i,
+        #         state=state_i,
+        #         sensordata=sensordata_i
+        #     )
+        #  except Exception as e:
+        #     print("Exception in rollout:", e)
+        #     raise
+
+        rollout.rollout(
+        model=self.model,
+        data=self.thread_local.data,
+        # nstep=state.shape[1],        # horizon
+        initial_state=initial_state, # shape (N, ) or (Nq+Nv, ) or something else
+        control=ctrl,               # shape (nstep, nu)
+        state=state,                # shape (nstep+1, state_dim)
+        sensordata=sensor_data      # shape (nstep, nsensordata)
+        )
+
+
+    def threaded_rollout(self, state, ctrl, initial_state, sensor_data, num_workers=32, nstep=5):
         """
         Perform rollouts in parallel using a thread pool.
 
@@ -157,14 +202,33 @@ class BaseMPPI:
             num_workers (int): Number of parallel threads to use.
             nstep (int): Number of steps in each rollout.
         """
+
+
         n = len(initial_state) // num_workers
 
+        actual_workers = min(num_workers, len(initial_state))
+        if actual_workers == 0:
+            # Means there's no data or zero rollouts to run
+            print('No avaiable worker!')
+            return
         # Divide tasks into chunks for each worker
+
         chunks = [(initial_state[i * n:(i + 1) * n], ctrl[i * n:(i + 1) * n], state[i * n:(i + 1) * n], sensor_data[i * n:(i + 1) * n])
                 for i in range(num_workers - 1)]
-
-        # Add remaining chunk
-        chunks.append((initial_state[(num_workers - 1) * n:], ctrl[(num_workers - 1) * n:], state[(num_workers - 1) * n:]))
+        
+        
+        # import pdb; pdb.set_trace()
+        # corrected code
+        chunks.append((initial_state[(num_workers - 1) * n:], 
+                    ctrl[(num_workers - 1) * n:], 
+                    state[(num_workers - 1) * n:], 
+                    sensor_data[(num_workers - 1) * n:]))
+        
+        print("initial_state shape:", initial_state.shape)
+        print("ctrl shape:", ctrl.shape)
+        print("state shape:", state.shape)
+        print("sensor_data shape:", sensor_data.shape)
+        print("num_workers:", num_workers)
 
         # Submit tasks to thread pool
         futures = [self.executor.submit(self.call_rollout, *chunk) for chunk in chunks]

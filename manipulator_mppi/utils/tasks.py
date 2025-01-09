@@ -13,9 +13,10 @@ Each task is represented as a dictionary containing key parameters:
 - `sim_path`: Path to the simulation file.
 """
 
-DEFAULT_MODEL_PATH = 'models/trifinger/trifinger_scene.xml'
+DEFAULT_MODEL_PATH = 'models/trifinger/trifinger_scene_noselfcollision.xml'
 DEFAULT_CONFIG_PATH = 'configs/mppi_trifinger_reaching.yml'
-DEFAULT_SIM_PATH = 'models/trifinger/trifinger_scene.xml'
+DEFAULT_SIM_PATH = 'models/trifinger/trifinger_scene_noselfcollision.xml'
+
 DEFAULT_ORIENTATION = [[1, 0, 0, 0]]
 
 
@@ -24,12 +25,7 @@ TASKS = {
         "finger_tips_pos": [[0.0, 0.0, 0.10],
                             [0.0, 0.0, 0.15],
                             [0.0, 0.0, 0.20]],
-        "goal_thresh": [0.01, 
-                        0.01, 
-                        0.01],
-        "waiting_times": [0, 
-                          0, 
-                          0],
+
         "model_path": DEFAULT_MODEL_PATH,
         "config_path": DEFAULT_CONFIG_PATH,
         "sim_path": DEFAULT_SIM_PATH

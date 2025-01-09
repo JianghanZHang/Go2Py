@@ -4,7 +4,24 @@
         <global offwidth="1280" offheight="960"/>
     </visual>
 
-    <compiler angle="radian" meshdir="meshes"/>
+    <compiler angle="radian" meshdir="assets"/>
+
+    <option cone="elliptic" impratio="100.0" integrator="Euler"
+          iterations="100" ls_iterations="10" solver='Newton' tolerance="0" noslip_iterations="0">
+
+        <flag   eulerdamp="enable"
+                clampctrl="disable"
+                warmstart="enable"
+                frictionloss="enable"
+                fwdinv="enable"
+                midphase="enable"
+                multiccd="disable"   
+                invdiscrete="disable">
+                <!-- autoreset="disable" -->
+        </flag>
+
+    </option>
+
     <size njmax="500" nconmax="100"/>
     <asset>
         <mesh name="SIM__BL_Finger_Base" file="SIM__BL-Finger_Base.stl"/>
@@ -60,7 +77,7 @@
                            range="-3.00197 3.00197"/>
                     <geom name="finger_tip_0" friction="0.9 0.005 0.0001" pos="0.014 0 0" quat="0.707107 0.707107 0 0"
                           type="mesh" rgba="0.5 0 0 1" mesh="SIM__BL_FINGER_TIP_LINK"/>
-                    <site rgba="0.5 0.0 0.0 1" size="0.0001" pos="0 0 -0.16" name="finger_tip_0"/>
+                    <!-- <site name="finger_tip_0_sensor" rgba="0.5 0.0 0.0 1" size="0.0001" pos="0 0 0.0"/> -->
                 </body>
             </body>
         </body>
@@ -84,7 +101,7 @@
                            range="-3.00197 3.00197"/>
                     <geom name="finger_tip_120" friction="0.9 0.005 0.0001" pos="0.014 0 0" quat="0.707107 0.707107 0 0"
                           type="mesh" rgba="0 0.5 0 1" mesh="SIM__BL_FINGER_TIP_LINK"/>
-                    <site rgba="0.0 0.5 0.00 1" size="0.0001" pos="0 0 -0.16" name="finger_tip_120"/>
+                    <!-- <site name="finger_tip_120_sensor" rgba="0.0 0.5 0.00 1" size="0.0001" pos="0 0 -0.0"/> -->
                 </body>
             </body>
         </body>
@@ -108,7 +125,7 @@
                            range="-3.00197 3.00197"/>
                     <geom name="finger_tip_240" friction="0.9 0.005 0.0001" pos="0.014 0 0" quat="0.707107 0.707107 0 0"
                           type="mesh" rgba="0 0.5 0.5 1" mesh="SIM__BL_FINGER_TIP_LINK"/>
-                    <site rgba="0.0 0.0 0.5 1" size="0.0001" pos="0 0 -0.16" name="finger_tip_240"/>
+                    <!-- <site name="finger_tip_240_sensor" rgba="0.0 0.0 0.5 1" size="0.0001" pos="0 0 -0.0" /> -->
                 </body>
             </body>
         </body>
@@ -129,15 +146,17 @@
 
     <!-- Finger tips in global frame -->
     <sensor>
-        <framepos name= "tip_position_0" objtype="site"  objname="finger_tip_0"/>
+        <framepos name= "finger_tip_0" objtype="geom"  objname="finger_tip_0" reftype="geom" refname="table"/>
 
-        <framepos name= "tip_position_120" objtype="site"  objname="finger_tip_120"/>
+        <framepos name= "tip_position_120" objtype="geom"  objname="finger_tip_120" reftype="geom" refname="table"/>
 
-        <framepos name= "tip_position_240" objtype="site"  objname="finger_tip_240"/>
+        <framepos name= "tip_position_240" objtype="geom"  objname="finger_tip_240" reftype="geom" refname="table"/>
     </sensor>
 
     <keyframe>
-    <key name="home" qpos="0.0, -0.6, -1.2 0.0, -0.6, -1.2 0.0, -0.6, -1.2"
-      ctrl="0.0, -0.6, -1.2 0.0, -0.6, -1.2 0.0, -0.6, -1.2"/>
+        <key name="default" 
+        qpos="0.0 -0.6 -1.2 0.0 -0.6 -1.2 0.0 -0.6 -1.2"
+
+        ctrl="0.0 -0.6 -1.2 0.0 -0.6 -1.2 0.0 -0.6 -1.2"/>
     </keyframe>
 </mujoco>
