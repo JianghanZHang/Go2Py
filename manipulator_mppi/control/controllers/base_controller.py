@@ -40,6 +40,7 @@ class BaseMPPI:
         self.n_samples = params['n_samples']
         self.noise_sigma = np.array(params['noise_sigma'])
         self.num_workers = params['n_workers']
+        self.beta = params['beta']
 
         self.sensor_data_size = params['sensor_data_size']
 
@@ -85,6 +86,7 @@ class BaseMPPI:
 
         self.act_max = np.array([1.5707963267948966, 4.494222823885399, 3.001966313430247] * 3)
 
+
     def reset_planner(self):
         """Reset the action planner to its initial state."""
         self.trajectory = np.zeros((self.horizon, self.act_dim))
@@ -114,11 +116,24 @@ class BaseMPPI:
             indices = np.round(indices_float).astype(int)
             size = (self.n_samples, self.n_knots, self.act_dim)
             noise = self.generate_noise(size, self.noise_sigma)
-            knot_points = self.trajectory[indices] + noise
+            
+            filtered_noise = np.zeros_like(noise)
+            filtered_noise[:, 0, :] = self.beta * noise[:, 0, :]
+
+            # Smoother noise from Sergey Levine's paper: https://arxiv.org/pdf/1909.11652
+
+            for n in range(1, self.n_knots):
+                filtered_noise[:, n, :] = self.beta * noise[:, n, :] + (1-self.beta) * filtered_noise[:, n-1, :]
+
+            # assert (filtered_noise[0, 1, :] == self.beta * noise[0, 1, :]  +  (1-self.bseta) * filtered_noise[0, 0, :]).all()
+
+            knot_points = self.trajectory[indices] + filtered_noise
             cubic_spline = CubicSpline(indices, knot_points, axis=1)
             actions = cubic_spline(np.arange(self.horizon))
             actions = np.clip(actions, self.act_min, self.act_max)
             return actions
+        
+        
         
     def generate_noise(self, size, noise_sigma):
         """

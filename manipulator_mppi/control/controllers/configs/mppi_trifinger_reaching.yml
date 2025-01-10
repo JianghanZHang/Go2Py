@@ -10,6 +10,7 @@ lambda: 0.001       # Temperature parameter for trajectory cost weighting.
 horizon: 40       # Prediction horizon (number of time steps).
 n_workers: 1      # Number of parallel workers for optimization.
 seed: 42          # Random seed for reproducibility.
+beta: 0.5
 
 # ============================
 # Model Parameters for Contact Dynamics

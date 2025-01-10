@@ -226,7 +226,6 @@ class reaching_MPPI(BaseMPPI):
 
         # tips_frame_pos_ref = tips_frame_pos_ref.T
         tips_frame_pos_ref = np.tile(tips_frame_pos_ref, (num_samples, 1))
-        # tips_frame_pos_ref = tips_frame_pos_ref.reshape(-1, tips_frame_pos_ref.shape[2])
 
         # Concatenate body and joint references for full reference state
         x_ref = joints_ref
