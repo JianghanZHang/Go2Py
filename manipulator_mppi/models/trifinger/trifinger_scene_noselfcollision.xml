@@ -105,6 +105,7 @@
                           type="mesh" mesh="SIM__BL_FINGER_TIP_LINK"
                           rgba="0.5 0 0 1"
                           contype="1" conaffinity="2"/>
+                    <site rgba="0.5 0.0 0.0 1" size="0.001" pos="0 0 -0.16" name="finger_tip_0_site"/>
                 </body>
             </body>
         </body>
@@ -145,6 +146,7 @@
                           type="mesh" mesh="SIM__BL_FINGER_TIP_LINK"
                           rgba="0 0.5 0 1"
                           contype="1" conaffinity="2"/>
+                    <site rgba="0.5 0.0 0.0 1" size="0.001" pos="0 0 -0.16" name="finger_tip_120_site"/>
                 </body>
             </body>
         </body>
@@ -184,12 +186,12 @@
                           type="mesh" mesh="SIM__BL_FINGER_TIP_LINK"
                           rgba="0 0.5 0.5 1"
                           contype="1" conaffinity="2"/>
+                    <site rgba="0.5 0.0 0.0 1" size="0.001" pos="0 0 -0.16" name="finger_tip_240_site"/>
                 </body>
             </body>
         </body>
 
     </worldbody>
-
 
     <actuator>
         <position name="finger_base_to_upper_joint_0"   joint="finger_base_to_upper_joint_0"/>
@@ -207,9 +209,9 @@
 
     <sensor>
         <!-- Positions of finger tips w.r.t the table -->
-        <framepos name="finger_tip_0"     objtype="geom" objname="finger_tip_0"   reftype="geom" refname="table"/>
-        <framepos name="tip_position_120" objtype="geom" objname="finger_tip_120" reftype="geom" refname="table"/>
-        <framepos name="tip_position_240" objtype="geom" objname="finger_tip_240" reftype="geom" refname="table"/>
+        <framepos name="tip_position_0"  objtype="site" objname="finger_tip_0_site"  reftype="geom" refname="table"/>
+        <framepos name="tip_position_120" objtype="site" objname="finger_tip_120_site" reftype="geom" refname="table"/>
+        <framepos name="tip_position_240" objtype="site" objname="finger_tip_240_site" reftype="geom" refname="table"/>
     </sensor>
 
     <keyframe>
