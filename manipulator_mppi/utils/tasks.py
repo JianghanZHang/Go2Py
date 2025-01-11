@@ -17,6 +17,11 @@ DEFAULT_MODEL_PATH = 'models/trifinger/trifinger_scene_noselfcollision.xml'
 DEFAULT_CONFIG_PATH = 'configs/mppi_trifinger_reaching.yml'
 DEFAULT_SIM_PATH = 'models/trifinger/trifinger_scene_noselfcollision.xml'
 
+
+MANIPULATION_MODEL_PATH = 'models/trifinger/trifinger_cube_scene.xml'
+MANIPULATION_CONFIG_PATH = 'configs/mppi_trifinger_manipulation.yml'
+MANIPULATION_SIM_PATH = 'models/trifinger/trifinger_cube_scene.xml'
+
 DEFAULT_ORIENTATION = [[1, 0, 0, 0]]
 
 
@@ -29,6 +34,19 @@ TASKS = {
         "model_path": DEFAULT_MODEL_PATH,
         "config_path": DEFAULT_CONFIG_PATH,
         "sim_path": DEFAULT_SIM_PATH
+    },
+
+    "cube_manipulation": {
+        "finger_tips_pos": [[0.0, 0.0, 0.075],
+                            [0.0, 0.0, 0.075],
+                            [0.0, 0.0, 0.075]],
+                            
+        "cube_state":[0.0, 0.0, 0.2, # Postion - x, y, z
+                      1.0, 0.0, 0.0, 0.0], # Orientation - w, x, y, z
+
+        "model_path": MANIPULATION_MODEL_PATH,
+        "config_path": MANIPULATION_CONFIG_PATH,
+        "sim_path": MANIPULATION_SIM_PATH
     }
 }
 

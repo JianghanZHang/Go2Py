@@ -3,7 +3,9 @@ import os
 
 # Adjust these imports to match where you have placed the trifinger code:
 from interface.simulator import Simulator
-from control.controllers.mppi_reaching import reaching_MPPI
+# from control.controllers.mppi_reaching import reaching_MPPI
+
+from control.controllers.mppi_manipulation import manipulation_MPPI
 from utils.tasks import get_task
 import faulthandler
 
@@ -17,7 +19,7 @@ def main(task):
     SIMULATION_STEP = 0.01
     CTRL_UPDATE_RATE = 100     # control update frequency
     CTRL_HORIZON = 40
-    CTRL_LAMBDA = 0.5
+    CTRL_LAMBDA = 0.1
     CTRL_N_SAMPLES = 50
 
     # Soft contact model parameters
@@ -34,7 +36,8 @@ def main(task):
     # ---------------------------
     # Initialize MPPI and simulator
     # ---------------------------
-    agent = reaching_MPPI(task=task)
+    # agent = reaching_MPPI(task=task)
+    agent = manipulation_MPPI(task=task)
     agent.set_params(horizon=CTRL_HORIZON,
                      lambda_=CTRL_LAMBDA,
                      N=CTRL_N_SAMPLES)
@@ -63,7 +66,7 @@ if __name__ == "__main__":
 
     # Example trifinger tasks:
 
-    VALID_TASKS = ["reaching", "push_box"]
+    VALID_TASKS = ["reaching", "cube_manipulation"]
 
     parser = argparse.ArgumentParser(description="Run trifinger MPPI simulation.")
     parser.add_argument('--task',
