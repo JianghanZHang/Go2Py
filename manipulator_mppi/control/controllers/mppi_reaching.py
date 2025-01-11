@@ -8,6 +8,7 @@ from utils.tasks import get_task
 from control.controllers.base_controller import BaseMPPI
 # from utils.transforms import batch_world_to_local_velocity, calculate_orientation_quaternion
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+import sys
 
 NQ = 9
 

@@ -46,11 +46,16 @@ class BaseMPPI:
 
         self.sampling_init = np.array([0.0, -0.6, -1.2] * 3)
 
+        self.q_cube = [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0]
+
         ##########  DEBUG   ############
         # import mujoco.viewer as viewer
         # Mjdata = mujoco.MjData(self.model)
-        # Mjdata.qpos = self.sampling_init
+        # Mjdata.qpos = np.hstack((self.sampling_init, self.q_cube))
         # mujoco.mj_forward(self.model, Mjdata)
+
+        # # viewer.launch(self.model, Mjdata)
+
         # import pdb; pdb.set_trace()
         
 
@@ -170,31 +175,6 @@ class BaseMPPI:
 
         # see https://mujoco.readthedocs.io/en/latest/changelog.html#id1 for changes in rollout function
         
-        # nsamples = state.shape[0]
-        # horizon = state.shape[1]
-
-        # try:
-        #     for i in range(nsamples):
-        #         idx = i * horizon
-        #         idx_next = (i+1) * horizon
-        #         # slice out the i-th sample's data
-        #         ctrl_i = ctrl[idx: idx_next]                         # shape (horizon, act_dim)
-        #         state_i = state[idx: idx_next]                       # shape (horizon+1, state_dim)
-        #         sensordata_i = sensor_data[idx: idx_next]            # shape (horizon, sensor_data_size)
-
-        #     rollout.rollout(
-        #         self.model, 
-        #         self.thread_local.data, 
-        #         nstep=state.shape[1],
-        #         initial_state=initial_state,
-        #         control=ctrl_i,
-        #         state=state_i,
-        #         sensordata=sensordata_i
-        #     )
-        #  except Exception as e:
-        #     print("Exception in rollout:", e)
-        #     raise
-
         rollout.rollout(
         model=self.model,
         data=self.thread_local.data,
