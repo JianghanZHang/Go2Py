@@ -13,14 +13,26 @@ Each task is represented as a dictionary containing key parameters:
 - `sim_path`: Path to the simulation file.
 """
 
-DEFAULT_MODEL_PATH = 'models/trifinger/trifinger_scene_noselfcollision.xml'
+# DEFAULT_MODEL_PATH = 'models/trifinger/trifinger_scene.xml'
+# DEFAULT_CONFIG_PATH = 'configs/mppi_trifinger_reaching.yml'
+# DEFAULT_SIM_PATH = 'models/trifinger/trifinger_scene.xml'
+
+DEFAULT_MODEL_PATH = 'models/nyufinger/trifinger_nyu_scene.xml'
 DEFAULT_CONFIG_PATH = 'configs/mppi_trifinger_reaching.yml'
-DEFAULT_SIM_PATH = 'models/trifinger/trifinger_scene_noselfcollision.xml'
+DEFAULT_SIM_PATH = 'models/nyufinger/trifinger_nyu_scene.xml'
+
+# DEFAULT_MODEL_PATH = 'models/nyufinger/trifinger_nyu_nocollision.xml'
+# DEFAULT_CONFIG_PATH = 'configs/mppi_trifinger_reaching.yml'
+# DEFAULT_SIM_PATH = 'models/nyufinger/trifinger_nyu_nocollision.xml'
 
 
-MANIPULATION_MODEL_PATH = 'models/trifinger/trifinger_cube_scene.xml'
+# MANIPULATION_MODEL_PATH = 'models/trifinger/trifinger_cube_scene.xml'
+# MANIPULATION_CONFIG_PATH = 'configs/mppi_trifinger_manipulation.yml'
+# MANIPULATION_SIM_PATH = 'models/trifinger/trifinger_cube_scene.xml'
+
+MANIPULATION_MODEL_PATH = 'models/nyufinger/trifinger_nyu_cube_scene.xml'
 MANIPULATION_CONFIG_PATH = 'configs/mppi_trifinger_manipulation.yml'
-MANIPULATION_SIM_PATH = 'models/trifinger/trifinger_cube_scene.xml'
+MANIPULATION_SIM_PATH = 'models/nyufinger/trifinger_nyu_cube_scene.xml'
 
 DEFAULT_ORIENTATION = [[1, 0, 0, 0]]
 
