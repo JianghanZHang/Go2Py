@@ -5,17 +5,19 @@
     </visual>
     <compiler angle="radian" meshdir="assets"/>
 
-    <option cone="pyramidal" impratio="10.0" integrator="Euler"
-            iterations="50" ls_iterations="100" solver="Newton"
+    <option cone="elliptic" impratio="1.0" integrator="Euler"
+            iterations="5" ls_iterations="12" solver="Newton"
             noslip_iterations="0">
+
         <flag eulerdamp="enable"
               clampctrl="disable"
-              warmstart="enable"
+              warmstart="disable"
               frictionloss="enable"
               fwdinv="enable"
               midphase="enable"
-              multiccd="disable"
+              multiccd="enable"
               invdiscrete="disable"/>
+
     </option>
 
     <!-- <size njmax="500" nconmax="100"/> -->
@@ -203,7 +205,7 @@
             <!-- set the cube to also collide with everything (contype=1, conaffinity=1) -->
             <geom name="cube_geom" type="box" size="0.025 0.025 0.025"
                   rgba="0.0 0.0 1.0 1.0" material="cube_material"
-                  friction="0.95 0.005 0.0001" margin="0"
+                  friction="0.95 0.005 0.0001" margin="0.0001"
                   contype="1" conaffinity="1"/>
         </body>
 
