@@ -176,7 +176,6 @@ class BaseMPPI:
         #                 initial_state=initial_state, control=ctrl, state=state)
 
         # see https://mujoco.readthedocs.io/en/latest/changelog.html#id1 for changes in rollout function
-
         
         rollout.rollout(
         model=self.model,

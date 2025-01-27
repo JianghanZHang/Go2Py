@@ -70,7 +70,7 @@ class reaching_MPPI(BaseMPPI):
 
         self.tips_frame_pos_ref = np.tile(self.tips_frame_pos_ref_1d[None, :], (self.horizon, 1))
 
-        self.joints_ref_1d = np.array([0.0, -0.6, -1.2] * 3 + [0.0, 0.0, 0.0] * 3)  # shape (18,)
+        self.joints_ref_1d = np.array([0.0, 0.7, -1.4] * 3 + [0.0, 0.0, 0.0] * 3)  # shape (18,)
         self.joints_ref = np.tile(self.joints_ref_1d[None, :], (self.horizon, 1))
 
         self.task_success = False

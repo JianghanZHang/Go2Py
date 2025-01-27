@@ -269,6 +269,8 @@ class manipulation_MPPI(BaseMPPI):
             print(f'tip0 position{sensor_data_rollout[0, 0, 0:3]}')
             print(f'tip120 position{sensor_data_rollout[0, 0, 3:6]}')
             print(f'tip240 position{sensor_data_rollout[0, 0, 6:9]}')
+            print(f'cube position{sensor_data_rollout[0, 0, 9:12]}')
+
 
         # Compute and return the cost of the best trajectory
         return (self.cost_func(best_rollouts[:,:,1:], np.array([self.selected_trajectory]), sensor_data_rollout, self.joints_ref_1d, self.tips_frame_pos_ref_1d, self.cube_state_ref_1d))[0]

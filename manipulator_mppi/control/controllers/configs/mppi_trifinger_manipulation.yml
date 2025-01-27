@@ -88,7 +88,7 @@ W_frame_pos:
 W_cube_state:
   - 10000 # x-position
   - 10000 # y-position
-  - 25000 # z-position
+  - 50000 # z-position
   - 0000 # w-quaternion
   - 0 # x-quaternion
   - 0 # y-quaternion
