@@ -28,8 +28,8 @@ DEFAULT_ORIENTATION = [[1, 0, 0, 0]]
 TASKS = {
     "reaching": {
         "finger_tips_pos": [[0.0, 0.0, 0.10],
-                            [0.0, 0.0, 0.1],
-                            [0.0, 0.0, 0.1]],
+                            [0.0, 0.0, 0.10],
+                            [0.0, 0.0, 0.10]],
 
         "model_path": DEFAULT_MODEL_PATH,
         "config_path": DEFAULT_CONFIG_PATH,
@@ -37,11 +37,11 @@ TASKS = {
     },
 
     "cube_manipulation": {
-        "finger_tips_pos": [[0.0, 0.0, 0.075],
-                            [0.0, 0.0, 0.075],
-                            [0.0, 0.0, 0.075]],
-                            
-        "cube_state":[0.0, 0.0, 0.2, # Postion - x, y, z
+        "finger_tips_pos": [[0.0, 0.0, 0.013],
+                            [0.0, 0.0, 0.013],
+                            [0.0, 0.0, 0.013]],
+        # The center of the cube staying on the table is (0, 0, 0.013 = 0.125 + 0.005)                    
+        "cube_state":[0.0, 0.0, 0.15, # Postion - x, y, z
                       1.0, 0.0, 0.0, 0.0], # Orientation - w, x, y, z
 
         "model_path": MANIPULATION_MODEL_PATH,

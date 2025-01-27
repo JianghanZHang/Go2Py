@@ -44,6 +44,8 @@ class BaseMPPI:
 
         self.sensor_data_size = params['sensor_data_size']
 
+        print(f'sensor_data_size:{self.sensor_data_size}')
+
         self.sampling_init = np.array([0.0, -0.6, -1.2] * 3)
 
         self.q_cube = [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0]
@@ -174,6 +176,7 @@ class BaseMPPI:
         #                 initial_state=initial_state, control=ctrl, state=state)
 
         # see https://mujoco.readthedocs.io/en/latest/changelog.html#id1 for changes in rollout function
+
         
         rollout.rollout(
         model=self.model,

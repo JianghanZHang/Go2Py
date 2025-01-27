@@ -35,13 +35,13 @@ n_knots: 4          # Number of control points (knots) in the spline.
 # ============================
 # Noise standard deviations applied to control inputs for exploration.
 noise_sigma:
-  - 0.05 # Upper joint (finger 0)
+  - 0.1 # Upper joint (finger 0)
   - 0.1  # Middle joint (finger 0)
   - 0.1  # Lower joint (finger 0)
-  - 0.05 # Upper joint (finger 120)
+  - 0.1 # Upper joint (finger 120)
   - 0.1  # Middle joint (finger 120)
   - 0.1  # Lower joint (finger 120)
-  - 0.05 # Upper joint (finger 240)
+  - 0.1 # Upper joint (finger 240)
   - 0.1  # Middle joint (finger 240)
   - 0.1  # Lower joint (finger 240)
 

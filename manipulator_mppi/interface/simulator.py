@@ -252,6 +252,19 @@ class Simulator:
         plt.ylabel("Sensor reading")
         plt.legend()
 
+        plt.figure()
+
+        plt.title("Cube Positions")
+            # Cube (indices 9..11)
+        plt.plot(self.time, self.sensordata[9, :], label="cube_x")
+        plt.plot(self.time, self.sensordata[10, :], label="cube_y")
+        plt.plot(self.time, self.sensordata[11, :], label="cube_z")
+        plt.axhline(y=0.15, color='r', linestyle=':', label='desired z position')
+
+        plt.xlabel("Time (s)")
+        plt.ylabel("Position (m)")
+        plt.legend()
+
         plt.show()
 
 

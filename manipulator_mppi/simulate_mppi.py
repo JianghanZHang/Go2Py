@@ -13,7 +13,7 @@ def main(task):
     # ---------------------------
     # Simulation and Controller Parameters
     # ---------------------------
-    T = 2000  # total steps, e.g. 20 seconds if dt=0.01
+    T = 300  # total steps, e.g. 20 seconds if dt=0.01
     VIEWER = True
 
     SIMULATION_STEP = 0.01

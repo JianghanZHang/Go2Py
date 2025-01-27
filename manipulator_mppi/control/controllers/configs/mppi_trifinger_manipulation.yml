@@ -6,7 +6,7 @@
 # These control the behavior of the Model Predictive Path Integral optimization.
 dt: 0.01          # Time step size for simulation (in seconds).
 n_samples: 50     # Number of trajectory samples per iteration.
-lambda: 0.001       # Temperature parameter for trajectory cost weighting.
+lambda: 0.5       # Temperature parameter for trajectory cost weighting.
 horizon: 40       # Prediction horizon (number of time steps).
 n_workers: 1      # Number of parallel workers for optimization.
 seed: 42          # Random seed for reproducibility.
@@ -22,7 +22,7 @@ o_solref:
 # ============================
 # Mujoco sensor data size
 # ============================
-sensor_data_size: 9
+sensor_data_size: 12
 
 # ============================
 # Spline Parameters
@@ -35,13 +35,13 @@ n_knots: 4          # Number of control points (knots) in the spline.
 # ============================
 # Noise standard deviations applied to control inputs for exploration.
 noise_sigma:
-  - 0.05 # Upper joint (finger 0)
+  - 0.2 # Upper joint (finger 0)
   - 0.1  # Middle joint (finger 0)
   - 0.1  # Lower joint (finger 0)
-  - 0.05 # Upper joint (finger 120)
+  - 0.2 # Upper joint (finger 120)
   - 0.1  # Middle joint (finger 120)
   - 0.1  # Lower joint (finger 120)
-  - 0.05 # Upper joint (finger 240)
+  - 0.2 # Upper joint (finger 240)
   - 0.1  # Middle joint (finger 240)
   - 0.1  # Lower joint (finger 240)
 
@@ -62,15 +62,15 @@ Q_diag:
   - 10 # Upper joint (finger 240)
   - 10 # Middle joint (finger 240)
   - 10 # Lower joint (finger 240)
-  - 0.01 # Upper joint (finger 0)
-  - 0.01 # Middle joint (finger 0)
-  - 0.01 # Lower joint (finger 0)
-  - 0.01 # Upper joint (finger 120)
-  - 0.01 # Middle joint (finger 120)
-  - 0.01 # Lower joint (finger 120)
-  - 0.01 # Upper joint (finger 240)
-  - 0.01 # Middle joint (finger 240)
-  - 0.01 # Lower joint (finger 240)
+  - 10 # Upper joint (finger 0)
+  - 10 # Middle joint (finger 0)
+  - 10 # Lower joint (finger 0)
+  - 10 # Upper joint (finger 120)
+  - 10 # Middle joint (finger 120)
+  - 10 # Lower joint (finger 120)
+  - 10 # Upper joint (finger 240)
+  - 10 # Middle joint (finger 240)
+  - 10 # Lower joint (finger 240)
 
 # Diagonal entries of an individual cost term for frame position (This need to correspesond to the order in Mujoco's sensor_data)
 W_frame_pos:
@@ -88,8 +88,8 @@ W_frame_pos:
 W_cube_state:
   - 10000 # x-position
   - 10000 # y-position
-  - 100000 # z-position
-  - 100 # w-quaternion
+  - 25000 # z-position
+  - 0000 # w-quaternion
   - 0 # x-quaternion
   - 0 # y-quaternion
   - 0 # z-quaternion
