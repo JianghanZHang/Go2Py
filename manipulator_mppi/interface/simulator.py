@@ -115,6 +115,7 @@ class Simulator:
         return self.data.sensordata
 
     def step(self, ctrl=None):
+
         """
         Step the simulation by one timestep with the specified control.
         """
@@ -189,7 +190,6 @@ class Simulator:
             mujoco.mj_step(self.model, self.data)
             mujoco.mj_forward(self.model, self.data)
 
-            # import pdb; pdb.set_trace()
 
             # Render
             if self.viewer is not None and self.viewer.is_alive:
@@ -208,12 +208,17 @@ class Simulator:
                     self.capture_frame(t)
             else:
                 pass
+                
+            # import pdb; pdb.set_trace()
+            
         
         # store the last step
         self.store_trajectory(self.T - 1)
 
         if self.viewer is not None:
             self.viewer.close()
+        
+
 
     def plot_trajectory(self):
         """
