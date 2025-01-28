@@ -15,8 +15,7 @@ def main():
 
     xml_path = "trifinger/finger.xml"
 
-    # xml_path = "trifinger/trifinger_cube_scene_noselfcollision.xml"
-
+    xml_path = "nyufinger/trifinger_nyu_cube_scene.xml"
 
     # ----------------------------------------------------------------------
     # 2) Load the MuJoCo model and create its data object

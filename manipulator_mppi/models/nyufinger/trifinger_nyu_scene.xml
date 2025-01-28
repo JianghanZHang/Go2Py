@@ -208,7 +208,7 @@
                        pos="0 0 0" axis="0 1 0"
                        limited="true" range="-1.5708 3.14159"/>
                 <geom name="finger120_middle_geom" type="mesh" mesh="middle_link"
-                      pos="0 -0.014 0"
+                      pos="0 0 0"
                       rgba="0 0.5 0 1"
                       contype="1" conaffinity="1"/>
 

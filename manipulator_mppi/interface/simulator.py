@@ -51,10 +51,12 @@ class Simulator:
         
         # If no model_path is specified, point to trifinger XML
         if model_path is None:
-            model_path = os.path.join(
-                os.path.dirname(__file__), 
-                "../models/trifinger/trifinger_with_ground.xml"
-            )
+            print('No model path specified.')
+            exit()
+            # model_path = os.path.join(
+            #     os.path.dirname(__file__), 
+            #     "../models/trifinger/trifinger_with_ground.xml"
+            # )
 
         # filter
         self.filter = filter
@@ -85,6 +87,8 @@ class Simulator:
         # Use keyframe[0] ("home") as initial condition
         # Make sure your trifinger XML has exactly one key definition at index 0
         # or adjust indices as needed.
+
+        # import pdb; pdb.set_trace()
         self.data.qpos[:] = self.model.key_qpos[0]
         self.data.qvel[:] = self.model.key_qvel[0]
         self.data.ctrl[:] = self.model.key_ctrl[0]
@@ -184,6 +188,14 @@ class Simulator:
                     print(f'finger0 action: {action[:3]}')
                     print(f'finger120 action: {action[3:6]}')
                     print(f'finger240 action: {action[6:9]}')
+
+                    print(f'finger0 position:{self.data.qpos[:3]}')
+                    print(f'finger120 position:{self.data.qpos[3:6]}')
+                    print(f'finger240 position:{self.data.qpos[6:9]}')
+
+                    print(f'cube position:{self.data.qpos[9:12]}')
+                    # import pdb; pdb.set_trace()
+
                     self.data.ctrl[:] = action
 
             # step
