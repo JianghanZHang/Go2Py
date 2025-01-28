@@ -53,7 +53,7 @@ TASKS = {
                             [0.0, 0.0, 0.013],
                             [0.0, 0.0, 0.013]],
         # The center of the cube staying on the table is (0, 0, 0.013 = 0.125 + 0.005)                    
-        "cube_state":[0.0, 0.0, 0.15, # Postion - x, y, z
+        "cube_state":[0.1, 0.1, 0.0, # Postion - x, y, z
                       1.0, 0.0, 0.0, 0.0], # Orientation - w, x, y, z
 
         "model_path": MANIPULATION_MODEL_PATH,
