@@ -154,9 +154,9 @@
                 <joint name="finger_upper_to_middle_joint_0"
                        pos="0 0 0" axis="0 1 0"
                        limited="true"
-                       range="-1.5708 1.5708"/>
+                       range="-1.5708 3.14159"/>
                 <geom name="finger0_middle_geom" type="mesh" mesh="middle_link"
-                      pos="0 0 0"
+                      pos="0 -0.014 0"
                       rgba="0.5 0 0 1"
                       contype="1" conaffinity="1"/>
 
@@ -172,9 +172,14 @@
                           rgba="0.5 0 0 1"
                           contype="1" conaffinity="1"/>
                     <site name="finger_tip_0_site"
-                          pos="0 0 -0.16"
-                          size="0.001"
-                          type="sphere"/>
+                              pos="0 -0.008 -0.16"
+                              size="0.01"
+                              type="sphere"/>
+                    <body name="finger_tip_link_0" pos="0 -0.008 -0.16">
+                        <inertial pos="0 0 0"
+                                    mass="0.01"
+                                    diaginertia="0.000000167 0.000000167 0.000000167"/>
+                    </body>
                 </body>
             </body>
         </body>
@@ -201,9 +206,9 @@
                           diaginertia="0.00041 0.00041 0.00003"/>
                 <joint name="finger_upper_to_middle_joint_120"
                        pos="0 0 0" axis="0 1 0"
-                       limited="true" range="-1.5708 1.5708"/>
+                       limited="true" range="-1.5708 3.14159"/>
                 <geom name="finger120_middle_geom" type="mesh" mesh="middle_link"
-                      pos="0 0 0"
+                      pos="0 -0.014 0"
                       rgba="0 0.5 0 1"
                       contype="1" conaffinity="1"/>
 
@@ -219,9 +224,14 @@
                           rgba="0 0.5 0 1"
                           contype="1" conaffinity="1"/>
                     <site name="finger_tip_120_site"
-                          pos="0 0 -0.16"
-                          size="0.001"
-                          type="sphere"/>
+                              pos="0 -0.008 -0.16"
+                              size="0.01"
+                              type="sphere"/>
+                    <body name="finger_tip_link_120" pos="0 -0.008 -0.16">
+                        <inertial pos="0 0 0"
+                                    mass="0.01"
+                                    diaginertia="0.000000167 0.000000167 0.000000167"/>
+                    </body>
                 </body>
             </body>
         </body>
@@ -247,9 +257,9 @@
                           diaginertia="0.00041 0.00041 0.00003"/>
                 <joint name="finger_upper_to_middle_joint_240"
                        pos="0 0 0" axis="0 1 0"
-                       limited="true" range="-1.5708 1.5708"/>
+                       limited="true" range="-1.5708 3.14159"/>
                 <geom name="finger240_middle_geom" type="mesh" mesh="middle_link"
-                      pos="0 0 0"
+                      pos="0 -0.014 0"
                       rgba="0 0.5 0.5 1"
                       contype="1" conaffinity="1"/>
 
@@ -265,9 +275,14 @@
                           rgba="0 0.5 0.5 1"
                           contype="1" conaffinity="1"/>
                     <site name="finger_tip_240_site"
-                          pos="0 0 -0.16"
-                          size="0.001"
-                          type="sphere"/>
+                              pos="0 -0.008 -0.16"
+                              size="0.01"
+                              type="sphere"/>
+                    <body name="finger_tip_link_240" pos="0 -0.008 -0.16">
+                        <inertial pos="0 0 0"
+                                    mass="0.01"
+                                    diaginertia="0.000000167 0.000000167 0.000000167"/>
+                    </body>
                 </body>
             </body>
         </body>
