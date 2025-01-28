@@ -187,7 +187,7 @@ class manipulation_MPPI(BaseMPPI):
         # cube_state_error[-1]
 
         # Give more weight to the terminal error
-        cube_state_error[self.horizon-1::self.horizon, :] *= 10
+        cube_state_error[self.horizon-1::self.horizon, :] *= self.horizon
         # tips_frame_pos_error[self.horizon-1::self.horizon, :] *= 10
 
         L1_norm_cube_state_cost = np.abs(np.dot(cube_state_error, self.W_cube_state)).sum(axis=1)

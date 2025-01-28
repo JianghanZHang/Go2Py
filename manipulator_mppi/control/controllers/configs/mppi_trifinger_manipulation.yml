@@ -7,10 +7,10 @@
 dt: 0.01          # Time step size for simulation (in seconds).
 n_samples: 50     # Number of trajectory samples per iteration.
 lambda: 0.1      # Temperature parameter for trajectory cost weighting.
-horizon: 40       # Prediction horizon (number of time steps).
+horizon: 50       # Prediction horizon (number of time steps).
 n_workers: 1      # Number of parallel workers for optimization.
 seed: 42          # Random seed for reproducibility.
-beta: 0.5
+beta: 1
 
 # ============================
 # Model Parameters for Contact Dynamics
@@ -27,6 +27,9 @@ sensor_data_size: 12
 # ============================
 # Spline Parameters
 # ============================
+# noise_type: "gaussian" # Spline interpolation type ("cubic" for cubic splines).
+noise_type: "halton" # Spline interpolation type ("cubic" for cubic splines).
+
 sample_type: "cubic" # Spline interpolation type ("cubic" for cubic splines).
 n_knots: 3          # Number of control points (knots) in the spline.
 
@@ -35,15 +38,15 @@ n_knots: 3          # Number of control points (knots) in the spline.
 # ============================
 # Noise standard deviations applied to control inputs for exploration.
 noise_sigma:
-  - 0.1 # Upper joint (finger 0)
-  - 0.2  # Middle joint (finger 0)
-  - 0.2  # Lower joint (finger 0)
-  - 0.1 # Upper joint (finger 120)
-  - 0.2  # Middle joint (finger 120)
-  - 0.2  # Lower joint (finger 120)
-  - 0.1 # Upper joint (finger 240)
-  - 0.2  # Middle joint (finger 240)
-  - 0.2  # Lower joint (finger 240)
+  - 0.2 # Upper joint (finger 0)
+  - 0.1  # Middle joint (finger 0)
+  - 0.1  # Lower joint (finger 0)
+  - 0.2 # Upper joint (finger 120)
+  - 0.1  # Middle joint (finger 120)
+  - 0.1  # Lower joint (finger 120)
+  - 0.2 # Upper joint (finger 240)
+  - 0.1  # Middle joint (finger 240)
+  - 0.1  # Lower joint (finger 240)
 
 
 # ============================
