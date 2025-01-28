@@ -7,8 +7,8 @@
 
     <compiler angle="radian" meshdir="assets"/>
 
-    <option cone="elliptic" impratio="50.0" integrator="Euler"
-            iterations="10" ls_iterations="20" solver="Newton"
+    <option cone="elliptic" impratio="10.0" integrator="Euler"
+            iterations="5" ls_iterations="20" solver="Newton"
             tolerance="0" noslip_iterations="0">
         <flag
             eulerdamp="enable"
@@ -285,11 +285,11 @@
         </body>
 
         <!-- ===================== ADD THE CUBE HERE ===================== -->
-        <body name="cube_link" pos="0 0 0.03">
+        <body name="cube_link" pos="0 0 0.00">
             <!-- Let it move freely -->
             <joint type="free"/>
-            <inertial pos="0.0 0.0 0.0"
-                      mass="0.1"
+            <inertial pos="0.0125 0.00125 0.0125"
+                      mass="0.05"
                       diaginertia="0.0000052167 0.0000052167 0.0000052167"/>
             <geom name="cube_geom" type="box"
                   size="0.025 0.025 0.025"
@@ -336,7 +336,7 @@
         <key name="default"
              qpos="0.0 0.7 -1.4   0.0 0.7 -1.4   0.0 0.7 -1.4 
                    0.0 0.0 0.03   1.0 0.0 0.0 0"
-             ctrl="0.0 0.7 -1.4   0.0 0.7 -1.4   0.0 0.7 -1.4"/>
+             ctrl="0.0 0.8 -1.4   0.0 0.8 -1.4   0.0 0.8 -1.4"/>
     </keyframe>
 
 </mujoco>

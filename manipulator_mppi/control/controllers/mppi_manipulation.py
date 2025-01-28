@@ -172,8 +172,8 @@ class manipulation_MPPI(BaseMPPI):
         tips_frame_pos = sensor_data[:, :9]
         tips_frame_pos_ref = sensor_data_ref[:, :9]
 
-        cube_length = 0.025
-        tips_frame_pos_ref = np.tile(cube_state[:, :3] + cube_length/2, (1,3))
+        # cube_length = 0.025
+        tips_frame_pos_ref = np.tile(cube_state[:, :3], (1,3))
 
         tips_frame_pos_error = tips_frame_pos - tips_frame_pos_ref
 
@@ -184,9 +184,12 @@ class manipulation_MPPI(BaseMPPI):
 
         # L2_norm_tips_pos_cost = np.einsum('ij,ik,jk->i', tips_frame_pos_error, tips_frame_pos_error, self.W_frame_pos)
 
-        cube_state_error[-1]
+        # cube_state_error[-1]
 
-        import pdb; pdb.set_trace()
+        # Give more weight to the terminal error
+        cube_state_error[self.horizon-1::self.horizon, :] *= 10
+        # tips_frame_pos_error[self.horizon-1::self.horizon, :] *= 10
+
         L1_norm_cube_state_cost = np.abs(np.dot(cube_state_error, self.W_cube_state)).sum(axis=1)
         L1_norm_tips_pos_cost = np.abs(np.dot(tips_frame_pos_error, self.W_frame_pos)).sum(axis=1)
 
