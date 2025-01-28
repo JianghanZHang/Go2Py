@@ -6,11 +6,11 @@
 # These control the behavior of the Model Predictive Path Integral optimization.
 dt: 0.01          # Time step size for simulation (in seconds).
 n_samples: 50     # Number of trajectory samples per iteration.
-lambda: 0.1       # Temperature parameter for trajectory cost weighting.
-horizon: 40       # Prediction horizon (number of time steps).
+lambda: 0.3       # Temperature parameter for trajectory cost weighting.
+horizon: 100       # Prediction horizon (number of time steps).
 n_workers: 1      # Number of parallel workers for optimization.
 seed: 42          # Random seed for reproducibility.
-beta: 0.5
+beta: 0.7
 
 # ============================
 # Model Parameters for Contact Dynamics
@@ -22,7 +22,7 @@ o_solref:
 # ============================
 # Mujoco sensor data size
 # ============================
-sensor_data_size: 9
+sensor_data_size: 12
 
 # ============================
 # Spline Parameters
@@ -35,15 +35,15 @@ n_knots: 4          # Number of control points (knots) in the spline.
 # ============================
 # Noise standard deviations applied to control inputs for exploration.
 noise_sigma:
-  - 0.1 # Upper joint (finger 0)
-  - 0.2  # Middle joint (finger 0)
-  - 0.2  # Lower joint (finger 0)
-  - 0.1 # Upper joint (finger 120)
-  - 0.2  # Middle joint (finger 120)
-  - 0.2  # Lower joint (finger 120)
-  - 0.1 # Upper joint (finger 240)
-  - 0.2  # Middle joint (finger 240)
-  - 0.2  # Lower joint (finger 240)
+  - 0.2 # Upper joint (finger 0)
+  - 0.4  # Middle joint (finger 0)
+  - 0.4  # Lower joint (finger 0)
+  - 0.2 # Upper joint (finger 120)
+  - 0.4  # Middle joint (finger 120)
+  - 0.4  # Lower joint (finger 120)
+  - 0.2 # Upper joint (finger 240)
+  - 0.4  # Middle joint (finger 240)
+  - 0.4  # Lower joint (finger 240)
 
 
 # ============================
@@ -74,15 +74,15 @@ Q_diag:
 
 # Diagonal entries of an individual cost term for frame position (This need to correspesond to the order in Mujoco's sensor_data)
 W_frame_pos:
- - 1000 # x-position (finger 0 tip frame)
- - 1000 # y-position (finger 0 tip frame)
- - 1000 # z-position (finger 0 tip frame)
- - 1000 # x-position (finger 120 tip frame)
- - 1000 # y-position (finger 120 tip frame)
- - 1000 # z-position (finger 120 tip frame)
- - 1000 # x-position (finger 240 tip frame)
- - 1000 # y-position (finger 240 tip frame)
- - 1000 # z-position (finger 240 tip frame)
+ - 10000 # x-position (finger 0 tip frame)
+ - 10000 # y-position (finger 0 tip frame)
+ - 10000 # z-position (finger 0 tip frame)
+ - 10000 # x-position (finger 120 tip frame)
+ - 10000 # y-position (finger 120 tip frame)
+ - 10000 # z-position (finger 120 tip frame)
+ - 10000 # x-position (finger 240 tip frame)
+ - 10000 # y-position (finger 240 tip frame)
+ - 10000 # z-position (finger 240 tip frame)
 
 # W_frame_pos:
 #   - 0 

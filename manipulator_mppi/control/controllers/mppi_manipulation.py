@@ -70,7 +70,9 @@ class manipulation_MPPI(BaseMPPI):
         self.tips_frame_pos_ref_1d = np.array(self.task_data['finger_tips_pos']).flatten()
         self.tips_frame_pos_ref = np.tile(self.tips_frame_pos_ref_1d[None, :], (self.horizon, 1))
 
-        self.joints_ref_1d = np.array([0.0, -0.6, -1.2] * 3 + [0.0, 0.0, 0.0] * 3)  # shape (18,)
+        # import pdb; pdb.set_trace()
+        self.joints_ref_1d = np.hstack((self.model.key_qpos[0, :9], self.model.key_qvel[0, :9])) # Key qpos and qvel of the robot
+
         self.joints_ref = np.tile(self.joints_ref_1d[None, :], (self.horizon, 1))
 
         self.cube_state_ref_1d = np.array(self.task_data['cube_state'])
@@ -92,6 +94,7 @@ class manipulation_MPPI(BaseMPPI):
         actions = self.perturb_action()
         self.obs = obs
 
+        # import pdb; pdb.set_trace()
         # Perform rollouts using threaded rollout function
         self.rollout_func(self.state_rollouts, actions, np.repeat(
             np.array([np.concatenate([[0], obs])]), self.n_samples, axis=0), self.sensor_datas,
@@ -151,8 +154,8 @@ class manipulation_MPPI(BaseMPPI):
         Returns:
             np.ndarray: Computed cost for each sample.
         """
-        kp = 0  # Proportional gain for joint error
-        kd = 0   # Derivative gain for joint velocity error
+        kp = 30  # Proportional gain for joint error
+        kd = 10   # Derivative gain for joint velocity error
         
         # Compute state error relative to the reference
         q_joint = x[:, :NQ]
@@ -169,18 +172,21 @@ class manipulation_MPPI(BaseMPPI):
         tips_frame_pos = sensor_data[:, :9]
         tips_frame_pos_ref = sensor_data_ref[:, :9]
 
+        cube_length = 0.025
+        tips_frame_pos_ref = np.tile(cube_state[:, :3] + cube_length/2, (1,3))
 
         tips_frame_pos_error = tips_frame_pos - tips_frame_pos_ref
-
 
         # Compute joint and velocity errors
         x_joint = x[:, :NQ]
         v_joint = x[:, NQ+7:2*NQ+7]
         u_error = kp * (action - x_joint) - kd * v_joint
 
-
         # L2_norm_tips_pos_cost = np.einsum('ij,ik,jk->i', tips_frame_pos_error, tips_frame_pos_error, self.W_frame_pos)
 
+        cube_state_error[-1]
+
+        import pdb; pdb.set_trace()
         L1_norm_cube_state_cost = np.abs(np.dot(cube_state_error, self.W_cube_state)).sum(axis=1)
         L1_norm_tips_pos_cost = np.abs(np.dot(tips_frame_pos_error, self.W_frame_pos)).sum(axis=1)
 
@@ -188,7 +194,7 @@ class manipulation_MPPI(BaseMPPI):
         # # Compute positional cost (L1 norm for positional error)
         # L1_norm_tips_pos_cost = np.abs(np.dot(tips_frame_pos_error, self.Q[:3, :3])).sum(axis=1)
         # Compute total cost
-        state_error = np.einsum('ij,ik,jk->i', joints_error, joints_error, self.Q)
+        # state_error = np.einsum('ij,ik,jk->i', joints_error, joints_error, self.Q)
 
         control_error = np.einsum('ij,ik,jk->i', u_error, u_error, self.R)
 
@@ -196,7 +202,8 @@ class manipulation_MPPI(BaseMPPI):
             np.einsum('ij,ik,jk->i', joints_error, joints_error, self.Q) +
             np.einsum('ij,ik,jk->i', u_error, u_error, self.R) +
             L1_norm_tips_pos_cost+
-            L1_norm_cube_state_cost
+            L1_norm_cube_state_cost+
+            control_error
         )
 
         return cost
@@ -265,11 +272,10 @@ class manipulation_MPPI(BaseMPPI):
             # print('Entering rollout from eval_best_trajectory()')
             self.rollout_func(best_rollouts, np.array([self.selected_trajectory]), np.repeat(np.array([np.concatenate([[0],self.obs])]), 1, axis=0), sensor_data_rollout, num_workers=self.num_workers, nstep=self.horizon)
 
-            # import pdb; pdb.set_trace()
-            print(f'tip0 position{sensor_data_rollout[0, 0, 0:3]}')
-            print(f'tip120 position{sensor_data_rollout[0, 0, 3:6]}')
-            print(f'tip240 position{sensor_data_rollout[0, 0, 6:9]}')
-            print(f'cube position{sensor_data_rollout[0, 0, 9:12]}')
+            # print(f'tip0 position{sensor_data_rollout[0, 0, 0:3]}')
+            # print(f'tip120 position{sensor_data_rollout[0, 0, 3:6]}')
+            # print(f'tip240 position{sensor_data_rollout[0, 0, 6:9]}')
+            # print(f'cube position{sensor_data_rollout[0, 0, 9:12]}')
 
 
         # Compute and return the cost of the best trajectory
@@ -279,4 +285,5 @@ class manipulation_MPPI(BaseMPPI):
         self.shutdown()
     
 if __name__ == "__main__":
+
     mppi = manipulation_MPPI()

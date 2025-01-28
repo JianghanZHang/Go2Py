@@ -31,7 +31,7 @@ class BaseMPPI:
         self.model = mujoco.MjModel.from_xml_path(model_path)
         self.model.opt.timestep = params['dt']
         self.model.opt.enableflags = 1  # Override contact settings
-        self.model.opt.o_solref = np.array(params['o_solref'])
+        # self.model.opt.o_solref = np.array(params['o_solref'])
 
         
         # MPPI parameters
@@ -46,9 +46,12 @@ class BaseMPPI:
 
         print(f'sensor_data_size:{self.sensor_data_size}')
 
-        self.sampling_init = np.array([0.0, -0.6, -1.2] * 3)
+        # self.sampling_init = np.array([0.0, -0.6, -1.2] * 3)
 
-        self.q_cube = [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0]
+        self.sampling_init = np.array(self.model.key_qpos[0, :9])
+
+        self.q_cube = [0.0, 0.0, 0.03, 
+                       1.0, 0.0, 0.0, 0.0]
 
         ##########  DEBUG   ############
         # import mujoco.viewer as viewer
@@ -87,11 +90,12 @@ class BaseMPPI:
 
         # Action limits
         self.act_dim = 9
-        # self.act_max = np.array([0.863, 4.501, -0.888] * 4)
-        # self.act_min = np.array([-0.863, -0.686, -2.818] * 4)
-        self.act_min = np.array([-1.5707963267948966, -1.3526301702956054, -3.001966313430247] * 3)
+        
+        self.act_min = np.array([-1.570796, -1.570796, -3.1415926] * 3)
 
-        self.act_max = np.array([1.5707963267948966, 4.494222823885399, 3.001966313430247] * 3)
+        self.act_max = np.array([1.570796, 4.1415926, 3.1415926] * 3)
+
+
 
 
     def reset_planner(self):
@@ -128,6 +132,8 @@ class BaseMPPI:
             filtered_noise[:, 0, :] = self.beta * noise[:, 0, :]
 
             # Smoother noise from Sergey Levine's paper: https://arxiv.org/pdf/1909.11652
+            
+            filtered_noise[:, 0, :] = noise[:, 0, :]
 
             for n in range(1, self.n_knots):
                 filtered_noise[:, n, :] = self.beta * noise[:, n, :] + (1-self.beta) * filtered_noise[:, n-1, :]
