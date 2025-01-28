@@ -31,7 +31,7 @@ class BaseMPPI:
         self.model = mujoco.MjModel.from_xml_path(model_path)
         self.model.opt.timestep = params['dt']
         self.model.opt.enableflags = 1  # Override contact settings
-        self.model.opt.o_solref = np.array(params['o_solref'])
+        # self.model.opt.o_solref = np.array(params['o_solref'])
         
         # MPPI parameters
         self.temperature = params['lambda']

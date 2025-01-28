@@ -69,8 +69,8 @@ class Simulator:
         self.model = mujoco.MjModel.from_xml_path(str(model_path))
         self.model.opt.timestep = dt
         # override contact settings
-        self.model.opt.enableflags = 1
-        self.model.opt.o_solref = np.array([timeconst, dampingratio])
+        # self.model.opt.enableflags = 1
+        # self.model.opt.o_solref = np.array([timeconst, dampingratio])
 
         # data
         self.data = mujoco.MjData(self.model)
