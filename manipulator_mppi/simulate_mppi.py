@@ -6,6 +6,7 @@ from interface.simulator import Simulator
 # from control.controllers.mppi_reaching import reaching_MPPI
 
 from control.controllers.mppi_manipulation import manipulation_MPPI
+from control.controllers.mppi_reaching import reaching_MPPI
 from utils.tasks import get_task
 import faulthandler
 
@@ -14,17 +15,6 @@ def main(task):
     # Simulation and Controller Parameters
     # ---------------------------
     T = 300  # total steps, e.g. 20 seconds if dt=0.01
-    VIEWER = True
-
-    SIMULATION_STEP = 0.01
-    CTRL_UPDATE_RATE = 100     # control update frequency
-    CTRL_HORIZON = 40
-    CTRL_LAMBDA = 0.1
-    CTRL_N_SAMPLES = 50
-
-    # Soft contact model parameters
-    TIMECONST = 0.02
-    DAMPINGRATIO = 1.0
 
     # ---------------------------
     # Get trifinger-specific task data
@@ -36,12 +26,27 @@ def main(task):
     # ---------------------------
     # Initialize MPPI and simulator
     # ---------------------------
-    # agent = reaching_MPPI(task=task)
-    agent = manipulation_MPPI(task=task)
-    agent.set_params(horizon=CTRL_HORIZON,
-                     lambda_=CTRL_LAMBDA,
-                     N=CTRL_N_SAMPLES)
 
+    if task == "reaching":
+        agent = reaching_MPPI(task=task)
+
+    elif task == "cube_manipulation":
+        agent = manipulation_MPPI(task=task)
+
+
+    # CTRL_HORIZON = 40
+    # CTRL_LAMBDA = 0.1
+    # CTRL_N_SAMPLES = 50
+    # agent.set_params(horizon=CTRL_HORIZON,
+    #                  lambda_=CTRL_LAMBDA,
+    #                  N=CTRL_N_SAMPLES)
+
+    VIEWER = True
+    SIMULATION_STEP = 0.01
+    CTRL_UPDATE_RATE = 100     # control update frequency
+    # Soft contact model parameters
+    TIMECONST = 0.02
+    DAMPINGRATIO = 1.0
     simulator = Simulator(
         agent=agent,
         viewer=VIEWER,
