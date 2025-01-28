@@ -7,7 +7,7 @@
 
     <compiler angle="radian" meshdir="assets"/>
 
-    <option cone="elliptic" impratio="10.0" integrator="Euler"
+    <option cone="pyramidal" impratio="1.0" integrator="Euler"
             iterations="10" ls_iterations="20" solver="Newton"
             tolerance="0" noslip_iterations="0">
         <flag

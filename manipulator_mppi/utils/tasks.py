@@ -32,10 +32,9 @@ DEFAULT_SIM_PATH = 'models/nyufinger/trifinger_nyu_scene.xml'
 
 MANIPULATION_MODEL_PATH = 'models/nyufinger/trifinger_nyu_cube_scene.xml'
 MANIPULATION_CONFIG_PATH = 'configs/mppi_trifinger_manipulation.yml'
-MANIPULATION_SIM_PATH = 'models/nyufinger/trifinger_nyu_cube_scene.xml'
+MANIPULATION_SIM_PATH = 'models/nyufinger/trifinger_nyu_cube_scene_simulation.xml'
 
 DEFAULT_ORIENTATION = [[1, 0, 0, 0]]
-
 
 TASKS = {
     "reaching": {
