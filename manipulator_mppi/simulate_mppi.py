@@ -1,14 +1,14 @@
 import argparse
-import os
+import faulthandler
+
+# from control.controllers.mppi_reaching import reaching_MPPI
+from control.controllers.mppi_manipulation import manipulation_MPPI
+from control.controllers.mppi_reaching import reaching_MPPI
 
 # Adjust these imports to match where you have placed the trifinger code:
 from interface.simulator import Simulator
-# from control.controllers.mppi_reaching import reaching_MPPI
-
-from control.controllers.mppi_manipulation import manipulation_MPPI
-from control.controllers.mppi_reaching import reaching_MPPI
 from utils.tasks import get_task
-import faulthandler
+
 
 def main(task):
     # ---------------------------
