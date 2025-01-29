@@ -277,7 +277,7 @@ class Simulator:
         plt.plot(self.time, self.sensordata[9, :], label="cube_x")
         plt.plot(self.time, self.sensordata[10, :], label="cube_y")
         plt.plot(self.time, self.sensordata[11, :], label="cube_z")
-        plt.axhline(y=0.15, color='r', linestyle=':', label='desired z position')
+        plt.axhline(y=0.2, color='r', linestyle=':', label='desired z position')
 
         plt.xlabel("Time (s)")
         plt.ylabel("Position (m)")
