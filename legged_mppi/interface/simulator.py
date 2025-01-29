@@ -1,16 +1,18 @@
-import mujoco
 import os
-import mujoco_viewer
+
 import matplotlib.pyplot as plt
+import mujoco
+import mujoco_viewer
 import numpy as np
-from scipy.spatial.transform import Rotation as R
 import tqdm
 from PIL import Image
+from scipy.spatial.transform import Rotation as R
+
 
 class Simulator:
     """
     A class representing a simulator for controlling and estimating the state of a system.
-    
+
     Attributes:
         filter (object): The filter used for state estimation.
         agent (object): The agent used for control.
@@ -93,7 +95,7 @@ class Simulator:
         self.data.ctrl[:] = ctrl
         mujoco.mj_step(self.model, self.data)
         return self.data.qpos, self.data.qvel
-    
+
     def store_trajectory(self, t):
         self.qpos[:, t] = self.data.qpos
         self.qvel[:, t] = self.data.qvel
@@ -102,13 +104,13 @@ class Simulator:
         self.time[t] = self.data.time
         self.cost[0, t] = self.agent.eval_best_trajectory()
         return None
-    
+
     def state_difference(self, pos1, pos2):
         # computes the finite difference between two states
         vel = np.zeros(self.model.nv)
         mujoco.mj_differentiatePos(self.model, vel, self.model.opt.timestep, pos1, pos2)
         return vel
-    
+
     def capture_frame(self):
         # Capture the current frame from the viewer
         width, height = self.viewer.viewport.width, self.viewer.viewport.height
@@ -150,7 +152,7 @@ class Simulator:
 
             mujoco.mj_step(self.model, self.data)
             mujoco.mj_forward(self.model, self.data)
-            
+
             error = np.linalg.norm(np.array(self.agent.body_ref[:3]) - np.array(self.data.qpos[:3]))
             if error < self.agent.goal_thresh[self.agent.goal_index]:
                 self.agent.next_goal()
@@ -163,16 +165,16 @@ class Simulator:
                     type=mujoco.mjtGeom.mjGEOM_SPHERE, # Specify that this is a sphere
                     label=""
                 )
-                            
+
                 self.viewer.render()
                 if self.save_frames:
                     self.capture_frame()
             else:
                 pass
-        
+
         # store last state
         self.store_trajectory(self.T-1)
-        
+
         if self.viewer is not None:
             self.viewer.close()
         return None
@@ -187,7 +189,7 @@ class Simulator:
                                                                                                  self.cost, delimiter='\t')
         # position
         plt.figure()
-        
+
         plt.plot(self.time, self.qpos[0, :], label="x (sim)", ls="--", color="blue")
         plt.plot(self.time, self.qpos[1, :], label="y (sim)", ls="--", color="orange")
         plt.plot(self.time, self.qpos[2, :], label="z (sim)", ls="--", color="magenta")
@@ -254,7 +256,7 @@ class Simulator:
         plt.legend()
         plt.xlabel("Time (s)")
         plt.ylabel("Angular Velocity (rad/s)")
-        
+
 
         # plot controls
         fig = plt.figure()
@@ -275,7 +277,7 @@ class Simulator:
         plt.xlabel("Time (s)")
         plt.ylabel("Control (angles)")
         plt.show()
-        
+
         return None
 
     def get_state(self):
@@ -284,26 +286,26 @@ class Simulator:
 def apply_translation_to_com(com_world, quaternion, translation_local):
     """
     Apply a translation in the robot's local frame to the CoM in the world frame.
-    
+
     Parameters:
     - com_world: 3D array, [x, y, z] coordinates of the CoM in the world frame
     - quaternion: 4D array, [q_w, q_x, q_y, q_z] quaternion representing the robot's orientation in the world
     - translation_local: 3D array, [x, y, z] translation in the robot's local frame (e.g., [0.3, 0, 0] for 30 cm along x-axis)
-    
+
     Returns:
     - new_com_world: 3D array, new [x, y, z] coordinates of the CoM in the world frame
     """
     # Convert quaternion to rotation matrix
     rotation = R.from_quat(quaternion[[1, 2, 3, 0]])
-    
+
     # Transform the local translation to the world frame
     translation_world = rotation.apply(translation_local)
-    
+
     # Apply the translation in the world frame to the CoM
     new_com_world = np.array(com_world) + translation_world
-    
+
     return new_com_world
-   
+
 if __name__ == "__main__":
     model_path = os.path.join(os.path.dirname(__file__), "../models/go1/task_simulate.xml")
 

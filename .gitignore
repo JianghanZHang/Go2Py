@@ -45,3 +45,5 @@ build/
 
 # Ignore compiled C extensions
 *.so
+
+*.mov

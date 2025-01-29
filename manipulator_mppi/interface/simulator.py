@@ -1,16 +1,17 @@
-import mujoco
 import os
-import mujoco_viewer
+
 import matplotlib.pyplot as plt
+import mujoco
+import mujoco_viewer
 import numpy as np
-from scipy.spatial.transform import Rotation as R
 import tqdm
 from PIL import Image
+
 
 class Simulator:
     """
     A class representing a simulator for controlling and estimating the state of a system (Trifinger).
-    
+
     Attributes:
         filter (object): The filter used for state estimation.
         agent (object): The agent used for control.
@@ -48,13 +49,13 @@ class Simulator:
                  ctrl_rate=100,
                  save_dir="./frames",
                  save_frames=False):
-        
+
         # If no model_path is specified, point to trifinger XML
         if model_path is None:
             print('No model path specified.')
             exit()
             # model_path = os.path.join(
-            #     os.path.dirname(__file__), 
+            #     os.path.dirname(__file__),
             #     "../models/trifinger/trifinger_with_ground.xml"
             # )
 
@@ -75,7 +76,7 @@ class Simulator:
         # data
         self.data = mujoco.MjData(self.model)
         self.T = T
-        
+
         # save frames
         self.save_frames = save_frames
         self.save_dir = save_dir
@@ -173,7 +174,7 @@ class Simulator:
             self.t = t
             # forward first to ensure sensor reading is up to date
             mujoco.mj_forward(self.model, self.data)
-            
+
             # store logs
             self.store_trajectory(t)
 
@@ -220,16 +221,16 @@ class Simulator:
                     self.capture_frame(t)
             else:
                 pass
-                
+
             # import pdb; pdb.set_trace()
-            
-        
+
+
         # store the last step
         self.store_trajectory(self.T - 1)
 
         if self.viewer is not None:
             self.viewer.close()
-        
+
 
 
     def plot_trajectory(self):
@@ -288,16 +289,16 @@ class Simulator:
 if __name__ == "__main__":
     # Example usage
     model_path = os.path.join(
-        os.path.dirname(__file__), 
+        os.path.dirname(__file__),
         "../models/trifinger/trifinger_scene.xml"
     )
 
     simulator = Simulator(
-        filter=None, 
-        T=300, 
-        dt=0.002, 
-        viewer=True, 
-        gravity=True, 
+        filter=None,
+        T=300,
+        dt=0.002,
+        viewer=True,
+        gravity=True,
         model_path=model_path
     )
     simulator.run()

@@ -1,10 +1,9 @@
-import numpy as np
-from interface.simulator import Simulator
+import argparse
+
 from control.controllers.mppi_locomotion import MPPI
+from interface.simulator import Simulator
 from utils.tasks import get_task
 
-import argparse
-import os
 
 def main(task):
     T = 2000  # 20 seconds
@@ -19,7 +18,7 @@ def main(task):
     # Soft contact model paramters
     TIMECONST = 0.02
     DAMPINGRATIO = 1.0
-    
+
     # Get task data
     task_data = get_task(task)
     sim_path = task_data["sim_path"]
@@ -29,7 +28,7 @@ def main(task):
     agent.set_params(horizon=CTRL_HORIZON, lambda_=CTRL_LAMBDA, N=CTRL_N_SAMPLES)
     simulator = Simulator(agent=agent, viewer=VIEWER, T=T, dt=SIMULATION_STEP, timeconst=TIMECONST,
                           dampingratio=DAMPINGRATIO, model_path=sim_path, ctrl_rate=CTRL_UPDATE_RATE)
-    
+
     # Run simulation
     simulator.run()
     simulator.plot_trajectory()
@@ -40,7 +39,7 @@ if __name__ == "__main__":
 
     # Parse arguments
     parser = argparse.ArgumentParser(description="Run simulation with a specified task.")
-    parser.add_argument('--task', type=str, required=True, choices=VALID_TASKS, 
+    parser.add_argument('--task', type=str, required=True, choices=VALID_TASKS,
                         help=f"Name of the task. Must be one of {VALID_TASKS}.")
     args = parser.parse_args()
 

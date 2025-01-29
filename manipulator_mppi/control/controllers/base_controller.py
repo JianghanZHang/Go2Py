@@ -106,7 +106,6 @@ class BaseMPPI:
             self.random_generator = qmc.Halton(d = self.act_dim*self.n_knots, scramble=True, seed=params["seed"])
             self.generate_noise = self.generate_Halton
 
-
     def reset_planner(self):
         """Reset the action planner to its initial state."""
         self.trajectory = np.zeros((self.horizon, self.act_dim))
@@ -154,8 +153,6 @@ class BaseMPPI:
             actions = np.clip(actions, self.act_min, self.act_max)
             return actions
 
-
-
     def generate_Gaussian(self, size, noise_sigma):
         """
         Generate noise for sampling actions.
@@ -167,7 +164,6 @@ class BaseMPPI:
             np.ndarray: Generated noise scaled by `noise_sigma`.
         """
         return self.random_generator.normal(size=size) * noise_sigma
-
 
     def generate_Halton(self, size, noise_sigma):
         """
@@ -207,7 +203,6 @@ class BaseMPPI:
 
         return halton_3d
 
-
     def thread_initializer(self):
         """Initialize thread-local storage for MuJoCo data."""
         self.thread_local.data = mujoco.MjData(self.model)
@@ -240,7 +235,6 @@ class BaseMPPI:
         state=state,                # shape (nstep+1, state_dim)
         sensordata=sensor_data      # shape (nstep, nsensordata)
         )
-
 
     def threaded_rollout(self, state, ctrl, initial_state, sensor_data, num_workers=32, nstep=5):
         """
