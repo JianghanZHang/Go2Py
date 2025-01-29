@@ -1,3 +1,33 @@
 [build-system]
-requires = ["setuptools>=64.0", "wheel"]
+requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "MPPI"
+version = "0.0.1"
+readme = "README.md"
+description = "MPPI"
+authors = [
+    {name = "Irving Fang", email = "irving.fang@nyu.edu"}
+]
+requires-python = ">=3.9"
+
+dependencies = [
+    "mujoco ==3.2.6",
+    "scipy",
+    "numpy",
+    "mujoco-python-viewer",
+    "matplotlib",
+    "tqdm"
+]
+
+[tool.ruff]
+line-length = 150
+target-version = "py38"
+
+[tool.ruff.lint]
+select = ["A", "B", "E", "F", "I", "RUF", "W"]
+ignore = ["F722"]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["E402", "F401"]

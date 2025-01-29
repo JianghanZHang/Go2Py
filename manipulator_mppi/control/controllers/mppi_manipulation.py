@@ -1,11 +1,13 @@
 import os
-import yaml
+
 import mujoco
 import numpy as np
+import yaml
 
 # Local imports (ensure these are part of your package structure)
-from utils.tasks import get_task
 from control.controllers.base_controller import BaseMPPI
+from utils.tasks import get_task
+
 # from utils.transforms import batch_world_to_local_velocity, calculate_orientation_quaternion
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -34,7 +36,7 @@ class manipulation_MPPI(BaseMPPI):
         self.task = task
         self.task_data = get_task(task)
 
-        model_path = self.task_data['model_path'] 
+        model_path = self.task_data['model_path']
         config_path = self.task_data['config_path']
         # waiting_times = self.task_data['waiting_times']
 
@@ -63,7 +65,7 @@ class manipulation_MPPI(BaseMPPI):
         self.internal_ref = True
         self.exp_weights = np.ones(self.n_samples) / self.n_samples  # Initial MPPI weights
         # self.waiting_times = waiting_times
-      
+
         # Initialize planner and goals
         self.reset_planner()
 
@@ -102,8 +104,13 @@ class manipulation_MPPI(BaseMPPI):
 
 
         # Calculate costs for each sampled trajectory
-        costs_sum = self.cost_func(self.state_rollouts[:, :, 1:], actions, self.sensor_datas, self.joints_ref, self.tips_frame_pos_ref, self.cube_state_ref)
-        
+        costs_sum = self.cost_func(self.state_rollouts[:, :, 1:],
+                                    actions,
+                                    self.sensor_datas,
+                                    self.joints_ref,
+                                    self.tips_frame_pos_ref,
+                                    self.cube_state_ref)
+
         # Calculate MPPI weights for the samples
         min_cost = np.min(costs_sum)
         max_cost = np.max(costs_sum)
@@ -122,7 +129,7 @@ class manipulation_MPPI(BaseMPPI):
         # import pdb; pdb.set_trace()
         # Return the first action in the trajectory as the output action
         return updated_actions[0]
-    
+
     def quaternion_distance_np(self, q1, q2):
         """
         Compute the distance between two sets of quaternions.
@@ -156,7 +163,7 @@ class manipulation_MPPI(BaseMPPI):
         """
         kp = 30  # Proportional gain for joint error
         kd = 10   # Derivative gain for joint velocity error
-        
+
         # Compute state error relative to the reference
         q_joint = x[:, :NQ]
         v_joint = x[:, NQ+7:2*NQ+7]
@@ -193,7 +200,7 @@ class manipulation_MPPI(BaseMPPI):
         L1_norm_cube_state_cost = np.abs(np.dot(cube_state_error, self.W_cube_state)).sum(axis=1)
         L1_norm_tips_pos_cost = np.abs(np.dot(tips_frame_pos_error, self.W_frame_pos)).sum(axis=1)
 
-        
+
         # # Compute positional cost (L1 norm for positional error)
         # L1_norm_tips_pos_cost = np.abs(np.dot(tips_frame_pos_error, self.Q[:3, :3])).sum(axis=1)
         # Compute total cost
@@ -227,7 +234,7 @@ class manipulation_MPPI(BaseMPPI):
         """
         num_samples = states.shape[0]
         num_pairs = states.shape[1]
-        
+
 
         # Flatten states and actions for batch processing
         states = states.reshape(-1, states.shape[2])
@@ -239,7 +246,7 @@ class manipulation_MPPI(BaseMPPI):
         # joints_ref = np.tile(joints_ref, (num_samples, 1, 1))
         # joints_ref = joints_ref.reshape(-1, joints_ref.shape[2])
 
-        joints_ref = np.tile(joints_ref, (num_samples, 1))  
+        joints_ref = np.tile(joints_ref, (num_samples, 1))
 
         # tips_frame_pos_ref = tips_frame_pos_ref.T
         tips_frame_pos_ref = np.tile(tips_frame_pos_ref, (num_samples, 1))
@@ -249,7 +256,7 @@ class manipulation_MPPI(BaseMPPI):
         # import pdb; pdb.set_trace()
         # Compute cost for each rollout
         costs = self.trifinger_cost_np(states, actions, joints_ref, cube_state_ref, sensor_datas, tips_frame_pos_ref)
-   
+
         # Sum costs across time steps for each sample
         total_costs = costs.reshape(num_samples, num_pairs).sum(axis=1)
 
@@ -273,7 +280,12 @@ class manipulation_MPPI(BaseMPPI):
             sensor_data_rollout = np.zeros((1, self.horizon, self.sensor_data_size))
             # import pdb; pdb.set_trace()
             # print('Entering rollout from eval_best_trajectory()')
-            self.rollout_func(best_rollouts, np.array([self.selected_trajectory]), np.repeat(np.array([np.concatenate([[0],self.obs])]), 1, axis=0), sensor_data_rollout, num_workers=self.num_workers, nstep=self.horizon)
+            self.rollout_func(best_rollouts,
+                              np.array([self.selected_trajectory]),
+                              np.repeat(np.array([np.concatenate([[0],self.obs])]), 1, axis=0),
+                              sensor_data_rollout,
+                              num_workers=self.num_workers,
+                              nstep=self.horizon)
 
             # print(f'tip0 position{sensor_data_rollout[0, 0, 0:3]}')
             # print(f'tip120 position{sensor_data_rollout[0, 0, 3:6]}')
@@ -282,11 +294,15 @@ class manipulation_MPPI(BaseMPPI):
 
 
         # Compute and return the cost of the best trajectory
-        return (self.cost_func(best_rollouts[:,:,1:], np.array([self.selected_trajectory]), sensor_data_rollout, self.joints_ref_1d, self.tips_frame_pos_ref_1d, self.cube_state_ref_1d))[0]
+        return (self.cost_func(best_rollouts[:,:,1:],
+                np.array([self.selected_trajectory]),
+                sensor_data_rollout, self.joints_ref_1d,
+                self.tips_frame_pos_ref_1d,
+                self.cube_state_ref_1d))[0]
 
     def __del__(self):
         self.shutdown()
-    
+
 if __name__ == "__main__":
 
     mppi = manipulation_MPPI()

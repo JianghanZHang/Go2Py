@@ -1,12 +1,14 @@
-import numpy as np
 import concurrent.futures
 import threading
 from concurrent.futures import ThreadPoolExecutor
+
 import mujoco
-from scipy.interpolate import CubicSpline
-from mujoco import rollout
+import numpy as np
 import yaml
+from mujoco import rollout
+from scipy.interpolate import CubicSpline
 from scipy.stats import qmc
+
 
 class BaseMPPI:
     """
@@ -33,7 +35,7 @@ class BaseMPPI:
         self.model.opt.timestep = params['dt']
         self.model.opt.enableflags = 1  # Override contact settings
         # self.model.opt.o_solref = np.array(params['o_solref'])
-        
+
         # MPPI parameters
         self.temperature = params['lambda']
         self.horizon = params['horizon']
@@ -50,7 +52,7 @@ class BaseMPPI:
 
         self.sampling_init = np.array(self.model.key_qpos[0, :9])
 
-        self.q_cube = [0.0, 0.0, 0.03, 
+        self.q_cube = [0.0, 0.0, 0.03,
                        1.0, 0.0, 0.0, 0.0]
 
         ##########  DEBUG   ############
@@ -62,7 +64,7 @@ class BaseMPPI:
         # # viewer.launch(self.model, Mjdata)
 
         # import pdb; pdb.set_trace()
-        
+
 
         # Initialize rollouts and sampling configurations
         self.h = params['dt']
@@ -79,7 +81,7 @@ class BaseMPPI:
         self.state_rollouts = np.zeros(
             (self.n_samples, self.horizon, mujoco.mj_stateSize(self.model, mujoco.mjtState.mjSTATE_FULLPHYSICS.value))
         )
-        
+
         # import pdb; pdb.set_trace()
         self.sensor_datas = np.zeros(
             (self.n_samples, self.horizon, self.sensor_data_size)
@@ -89,17 +91,17 @@ class BaseMPPI:
 
         # Action limits
         self.act_dim = 9
-        
+
         self.act_min = np.array([-1.570796, -1.570796, -3.1415926] * 3)
 
         self.act_max = np.array([1.570796, 3.1415926, 3.1415926] * 3)
-        
+
         self.noise_type = params['noise_type']
 
         if self.noise_type == 'gaussian':
             self.random_generator = np.random.default_rng(params["seed"])
             self.generate_noise = self.generate_Gaussian
-        
+
         if self.noise_type == 'halton':
             self.random_generator = qmc.Halton(d = self.act_dim*self.n_knots, scramble=True, seed=params["seed"])
             self.generate_noise = self.generate_Halton
@@ -114,31 +116,31 @@ class BaseMPPI:
         if self.sample_type == 'normal':
             size = (self.n_samples, self.horizon, self.act_dim)
             return self.generate_noise(size)
-        
+
         elif self.sample_type == 'cubic':
             indices = np.arange(self.n_knots)*self.horizon//self.n_knots
             size = (self.n_samples, self.n_knots, self.act_dim)
             knot_points = self.generate_noise(size)
             cubic_spline = CubicSpline(indices, knot_points, axis=1)
             return cubic_spline(np.arange(self.horizon))
-        
+
     def perturb_action(self):
         if self.sample_type == 'normal':
             size = (self.n_samples, self.horizon, self.act_dim)
             actions = self.trajectory + self.generate_noise(size, self.noise_sigma)
             actions = np.clip(actions, self.act_min, self.act_max)
             return actions
-        
+
         elif self.sample_type == 'cubic':
             indices_float = np.linspace(0, self.horizon - 1, num=self.n_knots)
             indices = np.round(indices_float).astype(int)
             size = (self.n_samples, self.n_knots, self.act_dim)
-            noise = self.generate_noise(size, self.noise_sigma)            
+            noise = self.generate_noise(size, self.noise_sigma)
             filtered_noise = np.zeros_like(noise)
             filtered_noise[:, 0, :] = self.beta * noise[:, 0, :]
 
             # Smoother noise from Sergey Levine's paper: https://arxiv.org/pdf/1909.11652
-            
+
             filtered_noise[:, 0, :] = noise[:, 0, :]
 
             for n in range(1, self.n_knots):
@@ -151,9 +153,9 @@ class BaseMPPI:
             actions = cubic_spline(np.arange(self.horizon))
             actions = np.clip(actions, self.act_min, self.act_max)
             return actions
-        
-        
-        
+
+
+
     def generate_Gaussian(self, size, noise_sigma):
         """
         Generate noise for sampling actions.
@@ -165,7 +167,6 @@ class BaseMPPI:
             np.ndarray: Generated noise scaled by `noise_sigma`.
         """
         return self.random_generator.normal(size=size) * noise_sigma
-    
 
 
     def generate_Halton(self, size, noise_sigma):
@@ -184,15 +185,15 @@ class BaseMPPI:
         n_samples, horizon, act_dim = size
 
         # 1) We treat the dimension as (horizon * act_dim).
-        dimension = horizon * act_dim
+        # dimension = horizon * act_dim
 
-        # 2) Create or re-use a Halton sampler.  
+        # 2) Create or re-use a Halton sampler.
         # In the constructor
 
         # 3) Generate n_samples points in [0,1]^dimension
         #    => shape (n_samples, dimension)
-        # Here this random_generator is a Halton sequence of size (self.act_dim*self.n_knots)        
-        halton_2d = self.random_generator.random(n=n_samples) 
+        # Here this random_generator is a Halton sequence of size (self.act_dim*self.n_knots)
+        halton_2d = self.random_generator.random(n=n_samples)
 
         # 4) Reshape to (n_samples, horizon, act_dim)
         halton_3d = halton_2d.reshape(n_samples, horizon, act_dim)
@@ -229,7 +230,7 @@ class BaseMPPI:
         #                 initial_state=initial_state, control=ctrl, state=state)
 
         # see https://mujoco.readthedocs.io/en/latest/changelog.html#id1 for changes in rollout function
-        
+
         rollout.rollout(
         model=self.model,
         data=self.thread_local.data,
@@ -265,15 +266,15 @@ class BaseMPPI:
 
         chunks = [(initial_state[i * n:(i + 1) * n], ctrl[i * n:(i + 1) * n], state[i * n:(i + 1) * n], sensor_data[i * n:(i + 1) * n])
                 for i in range(num_workers - 1)]
-        
-        
+
+
         # import pdb; pdb.set_trace()
         # corrected code
-        chunks.append((initial_state[(num_workers - 1) * n:], 
-                    ctrl[(num_workers - 1) * n:], 
-                    state[(num_workers - 1) * n:], 
+        chunks.append((initial_state[(num_workers - 1) * n:],
+                    ctrl[(num_workers - 1) * n:],
+                    state[(num_workers - 1) * n:],
                     sensor_data[(num_workers - 1) * n:]))
-        
+
         print("initial_state shape:", initial_state.shape)
         print("ctrl shape:", ctrl.shape)
         print("state shape:", state.shape)
