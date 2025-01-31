@@ -66,7 +66,7 @@
         <!-- Table: collides with contype=1, conaffinity=1 -->
         <geom name="table" type="plane" material="groundplane"
               size="0 0 0.05" rgba="0.8 0.8 0.8 1.0"
-              friction="0.8" condim="6"
+              friction="0.3" condim="6"
               contype="1" conaffinity="1"/>
 
         <!-- ===================== BASE (no collision) ===================== -->
@@ -304,17 +304,17 @@
 
     <!-- ============ ACTUATORS ============ -->
     <actuator>
-        <position name="finger_base_to_upper_joint_0"   joint="finger_base_to_upper_joint_0"/>
-        <position name="finger_upper_to_middle_joint_0" joint="finger_upper_to_middle_joint_0"/>
-        <position name="finger_middle_to_lower_joint_0" joint="finger_middle_to_lower_joint_0"/>
+        <position name="finger_base_to_upper_joint_0"   joint="finger_base_to_upper_joint_0" kp="1" kv="0"/>
+        <position name="finger_upper_to_middle_joint_0" joint="finger_upper_to_middle_joint_0" kp="1" kv="0"/>
+        <position name="finger_middle_to_lower_joint_0" joint="finger_middle_to_lower_joint_0" kp="1" kv="0"/>
 
-        <position name="finger_base_to_upper_joint_120"   joint="finger_base_to_upper_joint_120"/>
-        <position name="finger_upper_to_middle_joint_120" joint="finger_upper_to_middle_joint_120"/>
-        <position name="finger_middle_to_lower_joint_120" joint="finger_middle_to_lower_joint_120"/>
+        <position name="finger_base_to_upper_joint_120"   joint="finger_base_to_upper_joint_120" kp="1" kv="0"/>
+        <position name="finger_upper_to_middle_joint_120" joint="finger_upper_to_middle_joint_120" kp="1" kv="0"/>
+        <position name="finger_middle_to_lower_joint_120" joint="finger_middle_to_lower_joint_120" kp="1" kv="0"/>
 
-        <position name="finger_base_to_upper_joint_240"   joint="finger_base_to_upper_joint_240"/>
-        <position name="finger_upper_to_middle_joint_240" joint="finger_upper_to_middle_joint_240"/>
-        <position name="finger_middle_to_lower_joint_240" joint="finger_middle_to_lower_joint_240"/>
+        <position name="finger_base_to_upper_joint_240"   joint="finger_base_to_upper_joint_240" kp="1" kv="0"/>
+        <position name="finger_upper_to_middle_joint_240" joint="finger_upper_to_middle_joint_240" kp="1" kv="0"/>
+        <position name="finger_middle_to_lower_joint_240" joint="finger_middle_to_lower_joint_240" kp="1" kv="0"/>
     </actuator>
 
     <!-- ============ SENSORS ============ -->
