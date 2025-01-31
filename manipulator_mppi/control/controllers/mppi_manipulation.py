@@ -7,6 +7,7 @@ import yaml
 # Local imports (ensure these are part of your package structure)
 from control.controllers.base_controller import BaseMPPI
 from utils.tasks import get_task
+from scipy.spatial.transform import Rotation as R
 
 # from utils.transforms import batch_world_to_local_velocity, calculate_orientation_quaternion
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -77,7 +78,18 @@ class manipulation_MPPI(BaseMPPI):
 
         self.joints_ref = np.tile(self.joints_ref_1d[None, :], (self.horizon, 1))
 
-        self.cube_state_ref_1d = np.array(self.task_data['cube_state'])
+        # self.cube_state_ref_1d = np.array(self.task_data['cube_state'])
+        cube_position = self.task_data['cube_state'][:3]
+        cube_orientation_rpy = self.task_data['cube_state'][3:]
+
+        # Converting RPY to quaternion
+        r = R.from_euler('xyz', cube_orientation_rpy, degrees=False)  # MuJoCo uses XYZ order
+        quat_xyzw = r.as_quat()  # SciPy returns [x, y, z, w]
+        quat_wxyz = np.roll(quat_xyzw, shift=1)  # Convert to [w, x, y, z]
+
+        cube_orientation = quat_wxyz
+
+        self.cube_state_ref_1d = np.hstack((cube_position, cube_orientation))
         self.cube_state_ref = np.tile(self.cube_state_ref_1d[None, :], (self.horizon, 1))
 
         self.task_success = False

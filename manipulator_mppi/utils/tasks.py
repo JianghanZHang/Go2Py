@@ -12,7 +12,7 @@ Each task is represented as a dictionary containing key parameters:
 - `config_path`: Path to the robot's configuration file.
 - `sim_path`: Path to the simulation file.
 """
-
+import numpy as np
 # DEFAULT_MODEL_PATH = 'models/trifinger/trifinger_scene.xml'
 # DEFAULT_CONFIG_PATH = 'configs/mppi_trifinger_reaching.yml'
 # DEFAULT_SIM_PATH = 'models/trifinger/trifinger_scene.xml'
@@ -52,8 +52,8 @@ TASKS = {
                             [0.0, 0.0, 0.013],
                             [0.0, 0.0, 0.013]],
         # The center of the cube staying on the table is (0, 0, 0.013 = 0.125 + 0.005)
-        "cube_state":[0.0, 0.0, 0.2, # Postion - x, y, z
-                      1.0, 0.0, 0.0, 0.0], # Orientation - w, x, y, z
+        "cube_state":[0, 0, 0.15, # Postion - x, y, z
+                      0, 0, 0], # Orientation - roll, pitch, yaw
 
         "model_path": MANIPULATION_MODEL_PATH,
         "config_path": MANIPULATION_CONFIG_PATH,
