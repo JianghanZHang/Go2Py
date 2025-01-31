@@ -173,8 +173,8 @@ class manipulation_MPPI(BaseMPPI):
         Returns:
             np.ndarray: Computed cost for each sample.
         """
-        kp = 30  # Proportional gain for joint error
-        kd = 10   # Derivative gain for joint velocity error
+        kp = 1  # Proportional gain for joint error
+        kd = 0   # Derivative gain for joint velocity error
 
         # Compute state error relative to the reference
         q_joint = x[:, :NQ]
@@ -186,6 +186,7 @@ class manipulation_MPPI(BaseMPPI):
 
         cube_state = x[:, NQ:NQ+7]
 
+        # TODO: Fix this state error calculation, now the quaternion error is wrong (Need to in the quaternion space) 
         cube_state_error = cube_state - cube_state_ref
 
         tips_frame_pos = sensor_data[:, :9]
@@ -218,14 +219,14 @@ class manipulation_MPPI(BaseMPPI):
         # Compute total cost
         # state_error = np.einsum('ij,ik,jk->i', joints_error, joints_error, self.Q)
 
-        control_error = np.einsum('ij,ik,jk->i', u_error, u_error, self.R)
+        # control_error = np.einsum('ij,ik,jk->i', u_error, u_error, self.R)
 
         cost = (
             np.einsum('ij,ik,jk->i', joints_error, joints_error, self.Q) +
             np.einsum('ij,ik,jk->i', u_error, u_error, self.R) +
             L1_norm_tips_pos_cost+
-            L1_norm_cube_state_cost+
-            control_error
+            L1_norm_cube_state_cost
+            # control_error
         )
 
         return cost
