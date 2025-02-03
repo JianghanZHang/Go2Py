@@ -6,6 +6,7 @@ import mujoco
 import numpy as np
 import yaml
 from mujoco import rollout
+from mujoco.rollout import Rollout
 from scipy.interpolate import CubicSpline
 from scipy.stats import qmc
 
@@ -35,7 +36,7 @@ class BaseMPPI:
         self.model.opt.timestep = params['dt']
         self.model.opt.enableflags = 1  # Override contact settings
         # self.model.opt.o_solref = np.array(params['o_solref'])
-
+        
         # MPPI parameters
         self.temperature = params['lambda']
         self.horizon = params['horizon']
@@ -48,7 +49,6 @@ class BaseMPPI:
 
         print(f'sensor_data_size:{self.sensor_data_size}')
 
-        # self.sampling_init = np.array([0.0, -0.6, -1.2] * 3)
 
         self.sampling_init = np.array(self.model.key_qpos[0, :9])
 
@@ -60,42 +60,48 @@ class BaseMPPI:
         # Mjdata = mujoco.MjData(self.model)
         # Mjdata.qpos = np.hstack((self.sampling_init, self.q_cube))
         # mujoco.mj_forward(self.model, Mjdata)
+        # viewer.launch(self.model, Mjdata)
 
-        # # viewer.launch(self.model, Mjdata)
-
-        # import pdb; pdb.set_trace()
-
-
+    
         # Initialize rollouts and sampling configurations
         self.h = params['dt']
         self.sample_type = params['sample_type']
         self.n_knots = params['n_knots']
+
+        self.parallel_rollout = Rollout(nthread=self.num_workers)
+
         self.rollout_func = self.threaded_rollout
+        
         self.cost_func = self.calculate_total_cost
 
         # Threading
-        self.thread_local = threading.local()
-        self.executor = ThreadPoolExecutor(max_workers=self.num_workers, initializer=self.thread_initializer)
+        # self.thread_local = threading.local()
+        # self.executor = ThreadPoolExecutor(max_workers=self.num_workers, initializer=self.thread_initializer)
 
-        # Initialize rollouts
+        # Rollouts
         self.state_rollouts = np.zeros(
             (self.n_samples, self.horizon, mujoco.mj_stateSize(self.model, mujoco.mjtState.mjSTATE_FULLPHYSICS.value))
         )
 
-        # import pdb; pdb.set_trace()
         self.sensor_datas = np.zeros(
             (self.n_samples, self.horizon, self.sensor_data_size)
         )
+        
+        self.rollout_models = [self.model for _ in range(self.n_samples)]
+        self.rollout_model = [self.model]
+
+        self.mujoco_data = [mujoco.MjData(self.model) for _ in range(self.num_workers)]
 
         self.selected_trajectory = None
 
-        # Action limits
+        # Action space
         self.act_dim = 9
 
         self.act_min = np.array([-1.570796, -1.570796, -3.1415926] * 3)
 
         self.act_max = np.array([1.570796, 3.1415926, 3.1415926] * 3)
-
+        
+        # Noise
         self.noise_type = params['noise_type']
 
         if self.noise_type == 'gaussian':
@@ -203,82 +209,126 @@ class BaseMPPI:
 
         return halton_3d
 
-    def thread_initializer(self):
-        """Initialize thread-local storage for MuJoCo data."""
-        self.thread_local.data = mujoco.MjData(self.model)
 
-    def shutdown(self):
-        """Shutdown the thread pool executor."""
-        self.executor.shutdown(wait=True)
-
-    def call_rollout(self, initial_state, ctrl, state, sensor_data):
+    def threaded_rollout(self, model, state, ctrl, initial_state, sensor_data, **kwargs):
         """
-        Perform a rollout of the model given the initial state and control actions.
+        Perform rollouts in parallel using MuJoCo's native batched rollout.
+
+        This function uses MuJoCo's rollout API from the official documentation.
+        It creates a list of MjData objects (one per thread) so that the native rollout
+        uses internal multithreading. Extra keyword arguments (like nstep) are passed along.
 
         Args:
-            initial_state (np.ndarray): Initial state of the model.
-            ctrl (np.ndarray): Control actions to apply during the rollout.
-            state (np.ndarray): State array to store the results of the rollout.
+            state (np.ndarray): Preallocated state output array of shape (nbatch, nstep, nstate).
+            ctrl (np.ndarray): Control array of shape (nbatch, nstep, ncontrol).
+            initial_state (np.ndarray): Initial state array of shape (nbatch, nstate).
+            sensor_data (np.ndarray): Preallocated sensor data array of shape (nbatch, nstep, nsensordata).
+            **kwargs: Additional keyword arguments (e.g., nstep).
         """
-        # rollout.rollout(self.model, self.thread_local.data, skip_checks=True,
-        #                 nroll=state.shape[0], nstep=state.shape[1],
-        #                 initial_state=initial_state, control=ctrl, state=state)
-
-        # see https://mujoco.readthedocs.io/en/latest/changelog.html#id1 for changes in rollout function
-
-        rollout.rollout(
-        model=self.model,
-        data=self.thread_local.data,
-        # nstep=state.shape[1],        # horizon
-        initial_state=initial_state, # shape (N, ) or (Nq+Nv, ) or something else
-        control=ctrl,               # shape (nstep, nu)
-        state=state,                # shape (nstep+1, state_dim)
-        sensordata=sensor_data      # shape (nstep, nsensordata)
+        # Determine number of steps from kwargs or use horizon.
+        # nstep = kwargs.get("nstep", self.horizon)
+        # If self.num_workers > 0, we create that many MjData objects as in self.mujoco_data.
+        
+        
+        # Call MuJoCo's native rollout function.
+        # According to Mujoco's documentation, the function returns (state, sensordata),
+        # Refer to this code: https://github.com/google-deepmind/mujoco/blob/main/python/mujoco/rollout.py
+        self.parallel_rollout.rollout(
+            model= model,  # wrap the model in a list
+            data=self.mujoco_data,
+            initial_state=initial_state,
+            nstep=state.shape[1],
+            initial_warmstart=None,
+            control=ctrl,
+            skip_checks=True,
+            control_spec=mujoco.mjtState.mjSTATE_CTRL.value,
+            state=state,
+            sensordata=sensor_data,
+            chunk_size=None
         )
 
-    def threaded_rollout(self, state, ctrl, initial_state, sensor_data, num_workers=32, nstep=5):
-        """
-        Perform rollouts in parallel using a thread pool.
+    # def thread_initializer(self):
+    #     """Initialize thread-local storage for MuJoCo data."""
+    #     self.thread_local.data = mujoco.MjData(self.model)
 
-        Args:
-            state (np.ndarray): Array to store the results of the rollouts.
-            ctrl (np.ndarray): Control actions for the rollouts.
-            initial_state (np.ndarray): Initial states for the rollouts.
-            num_workers (int): Number of parallel threads to use.
-            nstep (int): Number of steps in each rollout.
-        """
+    # def shutdown(self):
+    #     """Shutdown the thread pool executor."""
+    #     self.executor.shutdown(wait=True)
+
+    
+
+    # def call_rollout(self, initial_state, ctrl, state, sensor_data):
+    #     """
+    #     Perform a rollout of the model given the initial state and control actions.
+
+    #     Args:
+    #         initial_state (np.ndarray): Initial state of the model.
+    #         ctrl (np.ndarray): Control actions to apply during the rollout.
+    #         state (np.ndarray): State array to store the results of the rollout.
+    #     """
+    #     # rollout.rollout(self.model, self.thread_local.data, skip_checks=True,
+    #     #                 nroll=state.shape[0], nstep=state.shape[1],
+    #     #                 initial_state=initial_state, control=ctrl, state=state)
+
+    #     # see https://mujoco.readthedocs.io/en/latest/changelog.html#id1 for changes in rollout function
+
+    #     rollout.rollout(
+    #     model=self.model,
+    #     data=self.thread_local.data,
+    #     # nstep=state.shape[1],        # horizon
+    #     initial_state=initial_state, # shape (N, ) or (Nq+Nv, ) or something else
+    #     control=ctrl,               # shape (nstep, nu)
+    #     state=state,                # shape (nstep+1, state_dim)
+    #     sensordata=sensor_data      # shape (nstep, nsensordata)
+    #     )
+
+    # def threaded_rollout(self, state, ctrl, initial_state, sensor_data, num_workers=32, nstep=5):
+    #     """
+    #     Perform rollouts in parallel using a thread pool.
+
+    #     Args:
+    #         state (np.ndarray): Array to store the results of the rollouts.
+    #         ctrl (np.ndarray): Control actions for the rollouts.
+    #         initial_state (np.ndarray): Initial states for the rollouts.
+    #         num_workers (int): Number of parallel threads to use.
+    #         nstep (int): Number of steps in each rollout.
+    #     """
 
 
-        n = len(initial_state) // num_workers
+    #     n = len(initial_state) // num_workers
 
-        actual_workers = min(num_workers, len(initial_state))
-        if actual_workers == 0:
-            # Means there's no data or zero rollouts to run
-            print('No avaiable worker!')
-            return
-        # Divide tasks into chunks for each worker
+    #     actual_workers = min(num_workers, len(initial_state))
+    #     if actual_workers == 0:
+    #         # Means there's no data or zero rollouts to run
+    #         print('No avaiable worker!')
+    #         return
+    #     # Divide tasks into chunks for each worker
 
-        chunks = [(initial_state[i * n:(i + 1) * n], ctrl[i * n:(i + 1) * n], state[i * n:(i + 1) * n], sensor_data[i * n:(i + 1) * n])
-                for i in range(num_workers - 1)]
+    #     chunks = [(initial_state[i * n:(i + 1) * n], ctrl[i * n:(i + 1) * n], state[i * n:(i + 1) * n], sensor_data[i * n:(i + 1) * n])
+    #             for i in range(num_workers - 1)]
 
 
-        # import pdb; pdb.set_trace()
-        # corrected code
-        chunks.append((initial_state[(num_workers - 1) * n:],
-                    ctrl[(num_workers - 1) * n:],
-                    state[(num_workers - 1) * n:],
-                    sensor_data[(num_workers - 1) * n:]))
+    #     chunks.append((initial_state[(num_workers - 1) * n:],
+    #                 ctrl[(num_workers - 1) * n:],
+    #                 state[(num_workers - 1) * n:],
+    #                 sensor_data[(num_workers - 1) * n:]))
 
-        print("initial_state shape:", initial_state.shape)
-        print("ctrl shape:", ctrl.shape)
-        print("state shape:", state.shape)
-        print("sensor_data shape:", sensor_data.shape)
-        print("num_workers:", num_workers)
+    #     print("initial_state shape:", initial_state.shape)
+    #     print("ctrl shape:", ctrl.shape)
+    #     print("state shape:", state.shape)
+    #     print("sensor_data shape:", sensor_data.shape)
+    #     print("num_workers:", num_workers)
 
-        # Submit tasks to thread pool
-        futures = [self.executor.submit(self.call_rollout, *chunk) for chunk in chunks]
-        for future in concurrent.futures.as_completed(futures):
-            future.result()  # Ensure all threads complete execution
+    #     # Submit tasks to thread pool
+    #     futures = [self.executor.submit(self.call_rollout, *chunk) for chunk in chunks]
+    #     for future in concurrent.futures.as_completed(futures):
+    #         future.result()  # Ensure all threads complete execution
+
+
+    # def __del__(self):
+    #     self.shutdown()
+
+
 
     def set_params(self, horizon, lambda_, N):
         """
@@ -305,5 +355,3 @@ class BaseMPPI:
         # Reset the planner to its initial state
         self.reset_planner()
 
-    def __del__(self):
-        self.shutdown()

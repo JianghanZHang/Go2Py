@@ -73,7 +73,6 @@ class manipulation_MPPI(BaseMPPI):
         self.tips_frame_pos_ref_1d = np.array(self.task_data['finger_tips_pos']).flatten()
         self.tips_frame_pos_ref = np.tile(self.tips_frame_pos_ref_1d[None, :], (self.horizon, 1))
 
-        # import pdb; pdb.set_trace()
         self.joints_ref_1d = np.hstack((self.model.key_qpos[0, :9], self.model.key_qvel[0, :9])) # Key qpos and qvel of the robot
 
         self.joints_ref = np.tile(self.joints_ref_1d[None, :], (self.horizon, 1))
@@ -108,11 +107,14 @@ class manipulation_MPPI(BaseMPPI):
         actions = self.perturb_action()
         self.obs = obs
 
-        # import pdb; pdb.set_trace()
         # Perform rollouts using threaded rollout function
-        self.rollout_func(self.state_rollouts, actions, np.repeat(
+        self.rollout_func(self.rollout_models, self.state_rollouts, actions, np.repeat(
             np.array([np.concatenate([[0], obs])]), self.n_samples, axis=0), self.sensor_datas,
             num_workers=self.num_workers, nstep=self.horizon)
+        
+        # self.rollout_func(self.state_rollouts, actions, np.repeat(
+        #     np.array([np.concatenate([[0], obs])]), self.n_samples, axis=0), self.sensor_datas,
+        #     num_workers=self.num_workers, nstep=self.horizon)
 
 
         # Calculate costs for each sampled trajectory
@@ -138,7 +140,6 @@ class manipulation_MPPI(BaseMPPI):
         self.trajectory = np.roll(updated_actions, shift=-1, axis=0)
         self.trajectory[-1] = updated_actions[-1]
 
-        # import pdb; pdb.set_trace()
         # Return the first action in the trajectory as the output action
         return updated_actions[0]
 
@@ -254,11 +255,6 @@ class manipulation_MPPI(BaseMPPI):
         actions = actions.reshape(-1, actions.shape[2])
         sensor_datas = sensor_datas.reshape(-1, sensor_datas.shape[2])
 
-        # # Repeat and reshape joint references for batch processing
-        # joints_ref = joints_ref.T
-        # joints_ref = np.tile(joints_ref, (num_samples, 1, 1))
-        # joints_ref = joints_ref.reshape(-1, joints_ref.shape[2])
-
         joints_ref = np.tile(joints_ref, (num_samples, 1))
 
         # tips_frame_pos_ref = tips_frame_pos_ref.T
@@ -266,7 +262,6 @@ class manipulation_MPPI(BaseMPPI):
 
         cube_state_ref = np.tile(cube_state_ref, (num_samples, 1))
 
-        # import pdb; pdb.set_trace()
         # Compute cost for each rollout
         costs = self.trifinger_cost_np(states, actions, joints_ref, cube_state_ref, sensor_datas, tips_frame_pos_ref)
 
@@ -291,20 +286,21 @@ class manipulation_MPPI(BaseMPPI):
             best_rollouts = np.zeros((1, self.horizon, mujoco.mj_stateSize(self.model, mujoco.mjtState.mjSTATE_FULLPHYSICS.value)))
             # Perform rollout for the best trajectory
             sensor_data_rollout = np.zeros((1, self.horizon, self.sensor_data_size))
-            # import pdb; pdb.set_trace()
-            # print('Entering rollout from eval_best_trajectory()')
-            self.rollout_func(best_rollouts,
+
+            self.rollout_func(self.rollout_model,
+                              best_rollouts,
                               np.array([self.selected_trajectory]),
                               np.repeat(np.array([np.concatenate([[0],self.obs])]), 1, axis=0),
                               sensor_data_rollout,
                               num_workers=self.num_workers,
                               nstep=self.horizon)
-
-            # print(f'tip0 position{sensor_data_rollout[0, 0, 0:3]}')
-            # print(f'tip120 position{sensor_data_rollout[0, 0, 3:6]}')
-            # print(f'tip240 position{sensor_data_rollout[0, 0, 6:9]}')
-            # print(f'cube position{sensor_data_rollout[0, 0, 9:12]}')
-
+            
+            # self.rollout_func(best_rollouts,
+            #                   np.array([self.selected_trajectory]),
+            #                   np.repeat(np.array([np.concatenate([[0],self.obs])]), 1, axis=0),
+            #                   sensor_data_rollout,
+            #                   num_workers=self.num_workers,
+            #                   nstep=self.horizon)
 
         # Compute and return the cost of the best trajectory
         return (self.cost_func(best_rollouts[:,:,1:],
@@ -313,8 +309,8 @@ class manipulation_MPPI(BaseMPPI):
                 self.tips_frame_pos_ref_1d,
                 self.cube_state_ref_1d))[0]
 
-    def __del__(self):
-        self.shutdown()
+    # def __del__(self):
+    #     self.shutdown()
 
 if __name__ == "__main__":
 
