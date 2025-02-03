@@ -52,7 +52,7 @@ TASKS = {
                             [0.0, 0.0, 0.013],
                             [0.0, 0.0, 0.013]],
         # The center of the cube staying on the table is (0, 0, 0.013 = 0.125 + 0.005)
-        "cube_state":[0, 0, 0.15, # Postion - x, y, z
+        "cube_state":[0, 0, 0.2, # Postion - x, y, z
                       0, 0, 0], # Orientation - roll, pitch, yaw
 
         "model_path": MANIPULATION_MODEL_PATH,
