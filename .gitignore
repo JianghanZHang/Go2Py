@@ -47,3 +47,8 @@ build/
 *.so
 
 *.mov
+
+*.perf
+*.data
+*.folded
+*.svg
