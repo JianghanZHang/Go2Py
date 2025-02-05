@@ -6,8 +6,8 @@ import yaml
 
 # Local imports (ensure these are part of your package structure)
 from control.controllers.base_controller import BaseMPPI
-from utils.tasks import get_task
 from scipy.spatial.transform import Rotation as R
+from utils.tasks import get_task
 
 # from utils.transforms import batch_world_to_local_velocity, calculate_orientation_quaternion
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -47,7 +47,11 @@ class manipulation_MPPI(BaseMPPI):
 
         # Initialize base MPPI
         super().__init__(MODEL_PATH, CONFIG_PATH)
-
+        cube_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_BODY, 'cube_link')
+        geom_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_GEOM, 'cube_geom')
+        # self.model.body_mass[cube_id] = 0.4 # Increase cube mass perception to the controller for manipulation task
+        # self.model.body_inertia[cube_id] = [0.2, 0.3, 0.4]
+        # self.model.geom_friction[geom_id] = [0.8, 0.1, 0.005]
         # load the configuration file
         with open(CONFIG_PATH, 'r') as file:
             params = yaml.safe_load(file)
@@ -111,7 +115,7 @@ class manipulation_MPPI(BaseMPPI):
         self.rollout_func(self.rollout_models, self.state_rollouts, actions, np.repeat(
             np.array([np.concatenate([[0], obs])]), self.n_samples, axis=0), self.sensor_datas,
             num_workers=self.num_workers, nstep=self.horizon)
-        
+
         # self.rollout_func(self.state_rollouts, actions, np.repeat(
         #     np.array([np.concatenate([[0], obs])]), self.n_samples, axis=0), self.sensor_datas,
         #     num_workers=self.num_workers, nstep=self.horizon)
@@ -187,7 +191,7 @@ class manipulation_MPPI(BaseMPPI):
 
         cube_state = x[:, NQ:NQ+7]
 
-        # TODO: Fix this state error calculation, now the quaternion error is wrong (Need to in the quaternion space) 
+        # TODO: Fix this state error calculation, now the quaternion error is wrong (Need to in the quaternion space)
         cube_state_error = cube_state - cube_state_ref
 
         tips_frame_pos = sensor_data[:, :9]
@@ -294,7 +298,7 @@ class manipulation_MPPI(BaseMPPI):
                               sensor_data_rollout,
                               num_workers=self.num_workers,
                               nstep=self.horizon)
-            
+
             # self.rollout_func(best_rollouts,
             #                   np.array([self.selected_trajectory]),
             #                   np.repeat(np.array([np.concatenate([[0],self.obs])]), 1, axis=0),

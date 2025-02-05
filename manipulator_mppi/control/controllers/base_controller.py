@@ -1,11 +1,6 @@
-import concurrent.futures
-import threading
-from concurrent.futures import ThreadPoolExecutor
-
 import mujoco
 import numpy as np
 import yaml
-from mujoco import rollout
 from mujoco.rollout import Rollout
 from scipy.interpolate import CubicSpline
 from scipy.stats import qmc
@@ -36,7 +31,7 @@ class BaseMPPI:
         self.model.opt.timestep = params['dt']
         self.model.opt.enableflags = 1  # Override contact settings
         # self.model.opt.o_solref = np.array(params['o_solref'])
-        
+
         # MPPI parameters
         self.temperature = params['lambda']
         self.horizon = params['horizon']
@@ -62,7 +57,6 @@ class BaseMPPI:
         # mujoco.mj_forward(self.model, Mjdata)
         # viewer.launch(self.model, Mjdata)
 
-    
         # Initialize rollouts and sampling configurations
         self.h = params['dt']
         self.sample_type = params['sample_type']
@@ -71,7 +65,7 @@ class BaseMPPI:
         self.parallel_rollout = Rollout(nthread=self.num_workers)
 
         self.rollout_func = self.threaded_rollout
-        
+
         self.cost_func = self.calculate_total_cost
 
         # Threading
@@ -86,7 +80,7 @@ class BaseMPPI:
         self.sensor_datas = np.zeros(
             (self.n_samples, self.horizon, self.sensor_data_size)
         )
-        
+
         self.rollout_models = [self.model for _ in range(self.n_samples)]
         self.rollout_model = [self.model]
 
@@ -100,7 +94,7 @@ class BaseMPPI:
         self.act_min = np.array([-1.570796, -1.570796, -3.1415926] * 3)
 
         self.act_max = np.array([1.570796, 3.1415926, 3.1415926] * 3)
-        
+
         # Noise
         self.noise_type = params['noise_type']
 
@@ -228,8 +222,8 @@ class BaseMPPI:
         # Determine number of steps from kwargs or use horizon.
         # nstep = kwargs.get("nstep", self.horizon)
         # If self.num_workers > 0, we create that many MjData objects as in self.mujoco_data.
-        
-        
+
+
         # Call MuJoCo's native rollout function.
         # According to Mujoco's documentation, the function returns (state, sensordata),
         # Refer to this code: https://github.com/google-deepmind/mujoco/blob/main/python/mujoco/rollout.py
@@ -254,8 +248,6 @@ class BaseMPPI:
     # def shutdown(self):
     #     """Shutdown the thread pool executor."""
     #     self.executor.shutdown(wait=True)
-
-    
 
     # def call_rollout(self, initial_state, ctrl, state, sensor_data):
     #     """
