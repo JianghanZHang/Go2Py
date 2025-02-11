@@ -13,9 +13,9 @@ Each task is represented as a dictionary containing key parameters:
 - `sim_path`: Path to the simulation file.
 """
 
-DEFAULT_MODEL_PATH = 'models/go1/go1_scene_mppi_pyr.xml'
+DEFAULT_MODEL_PATH = 'models/go2/go2.xml'
 DEFAULT_CONFIG_PATH = 'configs/mppi_gait_config_walk.yml'
-DEFAULT_SIM_PATH = 'models/go1/go1_scene_mppi.xml'
+DEFAULT_SIM_PATH = 'models/go2/go2.xml'
 DEFAULT_ORIENTATION = [[1, 0, 0, 0]]
 
 
