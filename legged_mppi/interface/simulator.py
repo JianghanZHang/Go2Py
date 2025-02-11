@@ -158,13 +158,13 @@ class Simulator:
                 self.agent.next_goal()
 
             if self.viewer is not None and self.viewer.is_alive:
-                self.viewer.add_marker(
-                    pos=self.agent.body_ref[:3]*1,         # Position of the marker
-                    size=[0.15, 0.15, 0.15],     # Size of the sphere
-                    rgba=[1, 0, 1, 1],           # Color of the sphere (red)
-                    type=mujoco.mjtGeom.mjGEOM_SPHERE, # Specify that this is a sphere
-                    label=""
-                )
+                # self.viewer.add_marker(
+                #     pos=self.agent.body_ref[:3]*1,         # Position of the marker
+                #     size=[0.15, 0.15, 0.15],     # Size of the sphere
+                #     rgba=[1, 0, 1, 1],           # Color of the sphere (red)
+                #     type=mujoco.mjtGeom.mjGEOM_SPHERE, # Specify that this is a sphere
+                #     label=""
+                # )
 
                 self.viewer.render()
                 if self.save_frames:

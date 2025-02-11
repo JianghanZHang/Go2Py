@@ -6,7 +6,7 @@ from utils.tasks import get_task
 
 
 def main(task):
-    T = 2000  # 20 seconds
+    T = 500  # 20 seconds
     VIEWER = True
 
     SIMULATION_STEP = 0.01

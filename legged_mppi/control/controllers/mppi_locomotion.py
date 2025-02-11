@@ -80,7 +80,7 @@ class MPPI(BaseMPPI):
             'walk': GaitScheduler(gait_path=GAIT_WALK_PATH, name='walk'),
             'walk_fast': GaitScheduler(gait_path=GAIT_WALK_FAST_PATH, name='walk_fast')
         }
-        self.gait_scheduler = self.gaits['in_place']
+        self.gait_scheduler = self.gaits['trot']
 
         # Initialize planner and goals
         self.reset_planner()
@@ -156,9 +156,14 @@ class MPPI(BaseMPPI):
         self.body_ref[3:7] = self.goal_ori
 
         # Perform rollouts using threaded rollout function
-        self.rollout_func(self.state_rollouts, actions, np.repeat(
-            np.array([np.concatenate([[0], obs])]), self.n_samples, axis=0), 
-            num_workers=self.num_workers, nstep=self.horizon)
+        # self.rollout_func(self.state_rollouts, actions, np.repeat(
+        #     np.array([np.concatenate([[0], obs])]), self.n_samples, axis=0), 
+        #     num_workers=self.num_workers, nstep=self.horizon)
+        
+        self.rollout_func(self.rollout_models, self.state_rollouts, actions, 
+                          np.repeat(np.array([np.concatenate([[0], obs])]), self.n_samples, axis=0), 
+                          num_workers=self.num_workers, nstep=self.horizon)
+
 
         # Update joint references from the gait scheduler
         if self.internal_ref:
@@ -308,12 +313,19 @@ class MPPI(BaseMPPI):
             # Create a rollout array for the best trajectory
             best_rollouts = np.zeros((1, self.horizon, mujoco.mj_stateSize(self.model, mujoco.mjtState.mjSTATE_FULLPHYSICS.value)))
             # Perform rollout for the best trajectory
-            self.rollout_func(best_rollouts, np.array([self.selected_trajectory]), np.repeat(np.array([np.concatenate([[0],self.obs])]), 1, axis=0), num_workers=self.num_workers, nstep=self.horizon)
+            self.rollout_func(self.rollout_model,
+                              best_rollouts,
+                              np.array([self.selected_trajectory]),
+                              np.repeat(np.array([np.concatenate([[0],self.obs])]), 1, axis=0),
+                              num_workers=self.num_workers,
+                              nstep=self.horizon)
+            
+            # self.rollout_func(best_rollouts, np.array([self.selected_trajectory]), np.repeat(np.array([np.concatenate([[0],self.obs])]), 1, axis=0), num_workers=self.num_workers, nstep=self.horizon)
         # Compute and return the cost of the best trajectory
         return (self.cost_func(best_rollouts[:,:,1:], np.array([self.selected_trajectory]), self.joints_ref, self.body_ref))[0]
 
-    def __del__(self):
-        self.shutdown()
+    # def __del__(self):
+    #     self.shutdown()
     
 if __name__ == "__main__":
     mppi = MPPI()
