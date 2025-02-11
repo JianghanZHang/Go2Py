@@ -112,15 +112,8 @@ class manipulation_MPPI(BaseMPPI):
         self.obs = obs
 
         # Perform rollouts using threaded rollout function
-<<<<<<< HEAD
         self.rollout_func(self.rollout_models, self.state_rollouts, actions, np.repeat(np.array([np.concatenate([[0], obs])]), self.n_samples, axis=0), self.sensor_datas, num_workers=self.num_workers, nstep=self.horizon)
         
-=======
-        self.rollout_func(self.rollout_models, self.state_rollouts, actions, np.repeat(
-            np.array([np.concatenate([[0], obs])]), self.n_samples, axis=0), self.sensor_datas,
-            num_workers=self.num_workers, nstep=self.horizon)
-
->>>>>>> 5116494d120d9a879eda9458c4d6746bf7797b52
         # self.rollout_func(self.state_rollouts, actions, np.repeat(
         #     np.array([np.concatenate([[0], obs])]), self.n_samples, axis=0), self.sensor_datas,
         #     num_workers=self.num_workers, nstep=self.horizon)
