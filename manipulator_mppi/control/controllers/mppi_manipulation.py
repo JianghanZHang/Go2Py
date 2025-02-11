@@ -93,7 +93,7 @@ class manipulation_MPPI(BaseMPPI):
 
         self.task_success = False
 
-
+    # @profile
     def update(self, obs):
         """
         Update the MPPI controller based on the current observation.
@@ -108,9 +108,7 @@ class manipulation_MPPI(BaseMPPI):
         self.obs = obs
 
         # Perform rollouts using threaded rollout function
-        self.rollout_func(self.rollout_models, self.state_rollouts, actions, np.repeat(
-            np.array([np.concatenate([[0], obs])]), self.n_samples, axis=0), self.sensor_datas,
-            num_workers=self.num_workers, nstep=self.horizon)
+        self.rollout_func(self.rollout_models, self.state_rollouts, actions, np.repeat(np.array([np.concatenate([[0], obs])]), self.n_samples, axis=0), self.sensor_datas, num_workers=self.num_workers, nstep=self.horizon)
         
         # self.rollout_func(self.state_rollouts, actions, np.repeat(
         #     np.array([np.concatenate([[0], obs])]), self.n_samples, axis=0), self.sensor_datas,
@@ -118,12 +116,7 @@ class manipulation_MPPI(BaseMPPI):
 
 
         # Calculate costs for each sampled trajectory
-        costs_sum = self.cost_func(self.state_rollouts[:, :, 1:],
-                                    actions,
-                                    self.sensor_datas,
-                                    self.joints_ref,
-                                    self.tips_frame_pos_ref,
-                                    self.cube_state_ref)
+        costs_sum = self.cost_func(self.state_rollouts[:, :, 1:], actions, self.sensor_datas, self.joints_ref, self.tips_frame_pos_ref, self.cube_state_ref)
 
         # Calculate MPPI weights for the samples
         min_cost = np.min(costs_sum)

@@ -186,15 +186,15 @@ class Simulator:
                     observation = np.concatenate([self.data.qpos, self.data.qvel], axis=0)
                     action = self.agent.update(observation)
 
-                    print(f'finger0 action: {action[:3]}')
-                    print(f'finger120 action: {action[3:6]}')
-                    print(f'finger240 action: {action[6:9]}')
+                    # print(f'finger0 action: {action[:3]}')
+                    # print(f'finger120 action: {action[3:6]}')
+                    # print(f'finger240 action: {action[6:9]}')
 
-                    print(f'finger0 position:{self.data.qpos[:3]}')
-                    print(f'finger120 position:{self.data.qpos[3:6]}')
-                    print(f'finger240 position:{self.data.qpos[6:9]}')
+                    # print(f'finger0 position:{self.data.qpos[:3]}')
+                    # print(f'finger120 position:{self.data.qpos[3:6]}')
+                    # print(f'finger240 position:{self.data.qpos[6:9]}')
 
-                    print(f'cube position:{self.data.qpos[9:12]}')
+                    # print(f'cube position:{self.data.qpos[9:12]}')
                     # import pdb; pdb.set_trace()
 
                     self.data.ctrl[:] = action

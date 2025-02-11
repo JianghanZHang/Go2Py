@@ -11,7 +11,7 @@ lambda: 0.25      # Temperature parameter for trajectory cost weighting.
 horizon: 40       # Prediction horizon (number of time steps).
 n_workers: 16      # Number of parallel workers for optimization.
 seed: 42          # Random seed for reproducibility.
-beta: 0.7        # Noist filtering parameter for MPPI.
+beta: 0.8        # Noist filtering parameter for MPPI.
 
 # ============================
 # Model Parameters for Contact Dynamics
@@ -32,7 +32,7 @@ sensor_data_size: 12
 noise_type: "halton" # Spline interpolation type ("cubic" for cubic splines).
 
 sample_type: "cubic" # Spline interpolation type ("cubic" for cubic splines).
-n_knots: 3          # Number of control points (knots) in the spline.
+n_knots: 2          # Number of control points (knots) in the spline.
 
 # ============================
 # Noise Parameters
@@ -68,15 +68,15 @@ Q_diag:
   - 1 # Middle joint (finger 240)
   - 1 # Lower joint (finger 240)
   #Velocity
-  - 0.001 # Upper joint (finger 0)
-  - 0.001 # Middle joint (finger 0)
-  - 0.001 # Lower joint (finger 0)
-  - 0.001 # Upper joint (finger 120)
-  - 0.001 # Middle joint (finger 120)
-  - 0.001 # Lower joint (finger 120)
-  - 0.001 # Upper joint (finger 240)
-  - 0.001 # Middle joint (finger 240)
-  - 0.001 # Lower joint (finger 240)
+  - 1 # Upper joint (finger 0)
+  - 1 # Middle joint (finger 0)
+  - 1 # Lower joint (finger 0)
+  - 1 # Upper joint (finger 120)
+  - 1 # Middle joint (finger 120)
+  - 1 # Lower joint (finger 120)
+  - 1 # Upper joint (finger 240)
+  - 1 # Middle joint (finger 240)
+  - 1 # Lower joint (finger 240)
 
 # Diagonal entries of an individual cost term for frame position (This need to correspesond to the order in Mujoco's sensor_data)
 W_frame_pos:
@@ -91,14 +91,15 @@ W_frame_pos:
  - 10000 # z-position (finger 240 tip frame)
 
 
+
 W_cube_state:
   - 10000 # x-position
   - 10000 # y-position
   - 50000 # z-position
   - 000 # w-quaternion
-  - 0 # x-quaternion
-  - 0 # y-quaternion
-  - 0 # z-quaternion
+  - 000 # x-quaternion
+  - 000 # y-quaternion
+  - 000 # z-quaternion
 
 
 # Diagonal entries of the control cost matrix R
