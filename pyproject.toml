@@ -13,7 +13,7 @@ authors = [
 requires-python = ">=3.9"
 
 dependencies = [
-    "mujoco ==3.2.6",
+    "mujoco==3.2.7",
     "scipy",
     "numpy",
     "mujoco-python-viewer",
