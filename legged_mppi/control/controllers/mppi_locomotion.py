@@ -52,6 +52,7 @@ class MPPI(BaseMPPI):
         config_path = self.task_data['config_path']
         waiting_times = self.task_data['waiting_times']
 
+        # import pdb; pdb.set_trace()
         # Dynamically resolve paths for model and configuration files
         CONFIG_PATH = os.path.join(BASE_DIR, config_path)
         MODEL_PATH = os.path.join(BASE_DIR, "../..", model_path)
@@ -128,7 +129,7 @@ class MPPI(BaseMPPI):
             if self.desired_gait[self.goal_index] in ['in_place', 'walk', 'walk_fast']:
                 self.noise_sigma = np.array([0.06, 0.1, 0.1] * 4)
             elif self.desired_gait[self.goal_index] in ['trot']:
-                self.noise_sigma = np.array([0.06, 0.2, 0.2] * 4)
+                self.noise_sigma = np.array([0.06, 0.1, 0.1] * 4)
         
     def update(self, obs):
         """
@@ -168,6 +169,8 @@ class MPPI(BaseMPPI):
         # Update joint references from the gait scheduler
         if self.internal_ref:
             self.joints_ref = self.gait_scheduler.gait[:, self.gait_scheduler.indices[:self.horizon]]
+        
+            import pdb; pdb.set_trace()
 
         # Calculate costs for each sampled trajectory
         costs_sum = self.cost_func(self.state_rollouts[:, :, 1:], actions, self.joints_ref, self.body_ref)
@@ -222,8 +225,8 @@ class MPPI(BaseMPPI):
         Returns:
             np.ndarray: Computed cost for each sample.
         """
-        kp = 50  # Proportional gain for joint error
-        kd = 3   # Derivative gain for joint velocity error
+        kp = 60  # Proportional gain for joint error
+        kd = 0   # Derivative gain for joint velocity error
 
         # Compute state error relative to the reference
         x_error = x - x_ref

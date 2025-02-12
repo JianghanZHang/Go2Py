@@ -6,6 +6,8 @@ import mujoco
 from scipy.interpolate import CubicSpline
 from mujoco.rollout import Rollout
 import yaml
+from scipy.stats import qmc
+
 
 class BaseMPPI:
     """
@@ -39,6 +41,7 @@ class BaseMPPI:
         self.n_samples = params['n_samples']
         self.noise_sigma = np.array(params['noise_sigma'])
         self.num_workers = params['n_workers']
+
         self.sampling_init = np.array([-0.3, 1.34, -2.83, 0.3, 1.34, -2.83] * 2)
 
         # Initialize rollouts and sampling configurations
@@ -74,8 +77,44 @@ class BaseMPPI:
 
         # Action limits
         self.act_dim = 12
-        self.act_max = np.array([0.863, 4.501, -0.888] * 4)
-        self.act_min = np.array([-0.863, -0.686, -2.818] * 4)
+        self.act_max = np.array([1.0472, 3.4907, -0.83776,   #FL
+                                 1.0472, 3.4907, -0.83776,   #FR
+                                 1.0472, 4.5379, -0.83776,   #RL
+                                 1.0472, 4.5379, -0.83776,]) #RR
+
+        self.act_min = np.array([-1.0472, -1.5708, -2.7227,
+                                 -1.0472, -1.5708, -2.7227,
+                                 -1.0472, -0.5236, -2.7227,
+                                 -1.0472, -0.5236, -2.7227,])
+
+        # <motor ctrlrange="-23.7 23.7"/>
+        # <default class="abduction">
+        # <joint axis="1 0 0" range="-1.0472 1.0472"/>
+        # </default>
+        # <default class="hip">
+        # <default class="front_hip">
+
+        # <joint range="-1.5708 3.4907"/>
+        # </default>
+        # <default class="back_hip">
+        # <joint range="-0.5236 4.5379"/>
+        # </default>
+        # </default>
+
+        # <default class="knee">
+        # <joint range="-2.7227 -0.83776"/>
+        # <motor ctrlrange="-45.43 45.43"/>
+
+        # Noise
+        self.noise_type = params['noise_type']
+
+        if self.noise_type == 'gaussian':
+            self.random_generator = np.random.default_rng(params["seed"])
+            self.generate_noise = self.generate_Gaussian
+
+        if self.noise_type == 'halton':
+            self.random_generator = qmc.Halton(d = self.act_dim*self.n_knots, scramble=True, seed=params["seed"])
+            self.generate_noise = self.generate_Halton
 
     def reset_planner(self):
         """Reset the action planner to its initial state."""
@@ -112,7 +151,7 @@ class BaseMPPI:
             actions = np.clip(actions, self.act_min, self.act_max)
             return actions
         
-    def generate_noise(self, size):
+    def generate_Gaussian(self, size):
         """
         Generate noise for sampling actions.
 
@@ -123,6 +162,45 @@ class BaseMPPI:
             np.ndarray: Generated noise scaled by `noise_sigma`.
         """
         return self.random_generator.normal(size=size) * self.noise_sigma
+
+    
+    def generate_Halton(self, size):
+        """
+        Generate noise for sampling actions using a Halton sequence.
+        The result is shape=(n_samples, horizon, act_dim), similar to generate_Gaussian.
+
+        Args:
+            size (tuple): (n_samples, horizon, act_dim)
+            noise_sigma (np.ndarray): Per-dimension scaling of noise, shape=(act_dim,)
+
+        Returns:
+            np.ndarray: Halton "noise" in the same shape as `generate_Gaussian`,
+                        scaled by `noise_sigma`, range approximately [-1, 1].
+        """
+        n_samples, horizon, act_dim = size
+
+        # 1) We treat the dimension as (horizon * act_dim).
+        # dimension = horizon * act_dim
+
+        # 2) Create or re-use a Halton sampler.
+        # In the constructor
+
+        # 3) Generate n_samples points in [0,1]^dimension
+        #    => shape (n_samples, dimension)
+        # Here this random_generator is a Halton sequence of size (self.act_dim*self.n_knots)
+        halton_2d = self.random_generator.random(n=n_samples)
+
+        # 4) Reshape to (n_samples, horizon, act_dim)
+        halton_3d = halton_2d.reshape(n_samples, horizon, act_dim)
+
+        # 5) Shift from [0,1] to [-0.5,0.5], then scale up by factor 2 => [-1,1]
+        halton_3d = (halton_3d - 0.5) * 2.0
+
+        # 6) Multiply by noise_sigma for each action dimension
+        #    noise_sigma has shape (act_dim,) => broadcast along (n_samples, horizon)
+        halton_3d *= self.noise_sigma  # shape => (n_samples, horizon, act_dim)
+
+        return halton_3d
 
     # def thread_initializer(self):
     #     """Initialize thread-local storage for MuJoCo data."""

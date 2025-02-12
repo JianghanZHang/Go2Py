@@ -156,6 +156,7 @@ class Simulator:
             error = np.linalg.norm(np.array(self.agent.body_ref[:3]) - np.array(self.data.qpos[:3]))
             if error < self.agent.goal_thresh[self.agent.goal_index]:
                 self.agent.next_goal()
+                print('Switch to next goal!')
 
             if self.viewer is not None and self.viewer.is_alive:
                 # self.viewer.add_marker(

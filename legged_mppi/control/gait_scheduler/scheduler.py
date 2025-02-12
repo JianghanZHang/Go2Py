@@ -72,6 +72,10 @@ class GaitScheduler:
         """
         return self.gait[:, self.phase_time] 
 
+    
+class RLGaitScheduler:
+    pass
+
 
 class Timer:
     """
